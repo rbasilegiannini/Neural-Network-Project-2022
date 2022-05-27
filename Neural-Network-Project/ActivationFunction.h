@@ -1,14 +1,34 @@
+#pragma once
+
 /**
  *
- * The activation functions to use to compute the neuron's output.
+ * This class contains the activation functions used to compute the neurons' output. 
  *
  */
 
-#pragma once
-
+#include <map>
+#include <functional>
 #include "Utility.h"
 
-Real Sigmoid(Real input);
-Real Identity(Real input);
+using std::map;
+using std::function;
 
+/**
+ * @brief All activation functions provided are reachable by these enums.
+ */
+enum class AFuncType {SIGMOID, IDENTITY};
 
+/**
+ *
+ * @brief The class provides a map used to call an activation function by AFuncType enum.
+ *
+ */
+class ActivationFunction {
+public:
+	static map <AFuncType, function<Real(Real)>> AFunction;
+
+private:
+	ActivationFunction();
+	static Real _sigmoid(const Real input);
+	static Real _identity(const Real input);
+};
