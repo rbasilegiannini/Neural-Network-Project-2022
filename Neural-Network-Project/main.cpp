@@ -2,7 +2,7 @@
 //
 
 #include <iostream>
-#include "ActivationFunction.h"
+#include "NeuralNetworkFF.h"
 
 #include <vector>
 #include <boost/numeric/ublas/matrix.hpp>
@@ -15,44 +15,38 @@ using boost::numeric::ublas::matrix;
 
 int main() {
 
-	// Test matrix
+	// Test network
+	const vector<size_t> _numNeuronsPerHiddenLayer{ 3, 1 };
+	const vector<Real> input { 1, 1 };
 
-	vector<matrix<Real>> _weightPerLayer;
-	const vector<size_t> _numNeuronsPerHiddenLayer{5, 4, 5, 3, 2};
-	const size_t inputDimension{ 3 };
-	const size_t _numHiddenLayers{ _numNeuronsPerHiddenLayer.size() };
+	NeuralNetworkFF net (2, _numNeuronsPerHiddenLayer);
 
-	_weightPerLayer.resize(_numHiddenLayers);
+	vector<matrix<Real>> weights(2);
+	weights[0].resize(3, 2);
+	weights[1].resize(1, 3);
 
-	// Resize matrices and set weights for each hidden layer
-	size_t idxLayer{ 0 };
-	for (auto& weightMatrix : _weightPerLayer) {
+	// W1
+	weights[0](0, 0) = 0.06364929;
+	weights[0](0, 1) = -0.52697621;
 
-		if (idxLayer == 0)
-			weightMatrix.resize(_numNeuronsPerHiddenLayer[idxLayer], inputDimension);
-		else
-			weightMatrix.resize(_numNeuronsPerHiddenLayer[idxLayer], _numNeuronsPerHiddenLayer[idxLayer - 1]);
+	weights[0](1, 0) = -0.89738668;
+	weights[0](1, 1) = 0.63310678;
 
-		// Random initialization of weights
-		srand(time(0));
-		for (auto i = 0; i < weightMatrix.size1(); i++) {
-			for (auto j = 0; j < weightMatrix.size2(); j++)
-				weightMatrix(i, j) = (Real)(((rand() % 21) - 10) * 0.1);	// Random value in [-1, 1] 
-		}
+	weights[0](2, 0) = 0.29764894;
+	weights[0](2, 1) = 0.21413957;
 
-		idxLayer++;
-	}
+	// W2
+	weights[1](0, 0) = -0.62903204;
+	weights[1](0, 1) = -0.78213938;
+	weights[1](0, 2) = 0.93025369;
 
-	// Print all weights
-	for (auto& weightMatrix : _weightPerLayer) {
+	net.setWeight(weights);
 
-		cout << "Dim: " << weightMatrix.size1() << "x" << weightMatrix.size2() << endl;
-		for (auto i = 0; i < weightMatrix.size1(); i++) {
-			for (auto j = 0; j < weightMatrix.size2(); j++)
-				cout << weightMatrix(i, j) << ' ';
-			cout << endl;
-		}
-		cout << endl;
-	}
-	
+	net.Print();
+
+	auto result = net.ComputeNetwork(input);
+	for (auto e : result)
+		cout << e << ' ';
+
+	cout << endl;
 }

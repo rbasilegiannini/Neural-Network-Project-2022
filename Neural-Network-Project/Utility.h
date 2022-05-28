@@ -7,9 +7,6 @@
  */
 
 /**
- * @brief \a real has the \a float precision. 
+ * @brief \a Real has the \a float precision. 
  */
 typedef float Real;
-
-
-
