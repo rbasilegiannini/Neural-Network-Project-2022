@@ -16,3 +16,22 @@ map <AFuncType, function<Real(Real)>> ActivationFunction::AFunction = {
 	{AFuncType::IDENTITY, [](Real input) {return _identity(input); }}
 };
 
+string NameOfAFuncType(const AFuncType type) {
+
+	string name;
+	switch (type)
+	{
+	case AFuncType::IDENTITY:
+		name = "IDENTITY";
+		break;
+
+	case AFuncType::SIGMOID:
+		name = "SIGMOID";
+		break;
+
+	default:
+		break;
+	}
+
+	return name;
+}

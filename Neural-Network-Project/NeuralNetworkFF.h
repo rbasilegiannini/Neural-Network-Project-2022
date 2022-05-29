@@ -4,7 +4,6 @@
 #include <boost/numeric/ublas/io.hpp>
 #include "ActivationFunction.h"
 
-
 using std::vector;
 using boost::numeric::ublas::matrix;
 
@@ -15,7 +14,15 @@ using boost::numeric::ublas::matrix;
  */
 class NeuralNetworkFF {
 public:
-	NeuralNetworkFF(const size_t inputDimension, const vector<size_t>& _nNeuronsPerHiddenLayer);
+
+	/**
+	 * Create a NN FF with random weights and bias. 
+	 * For all layers the default activation function is the sigmoid.
+	 * 
+	 * \param	inputDimension is the input's dimension accepted by the network.
+	 * \param	nNeuronsPerLayer is the vector that contains the number of neurons for each layer.
+	 */
+	NeuralNetworkFF(const size_t inputDimension, const vector<size_t>& nNeuronsPerLayer);
 
 	size_t GetNumLayers() { return _numLayers; }
 	size_t GetNumNeuronsPerLayer(const size_t idxLayer) { return _numNeuronsPerLayer[idxLayer]; }
@@ -26,7 +33,23 @@ public:
 	void SetWeights(const size_t idxLayer, const matrix<Real>& newWeights);
 	void SetBias(const size_t idxLayer, vector<Real>& newBias);
 
+	/**
+	 * This function computes the output of the network based on the current weights and bias.
+	 * 
+	 * \param	input is the vector with real numbers of the input. This vector must have the same dimension of 
+	 *			the input of the network.
+	 * \return	A vector of reals that contains the result of the computation.
+	 */
 	vector<Real> ComputeNetwork(const vector<Real>& input);
+
+	/**
+		This function prints, for each layer:
+			- The index layer (from the first hidden layer to the output layer);
+	 		- The dimension and the values of the weights matrix;
+	 		- The bias column;
+			- The activation function.
+	 * 
+	 */
 	void PrintNetwork();
 
 private:

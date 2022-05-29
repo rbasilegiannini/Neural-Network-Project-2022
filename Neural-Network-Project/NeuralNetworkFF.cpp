@@ -6,9 +6,9 @@
 using std::cout;
 using std::endl;
 
-NeuralNetworkFF :: NeuralNetworkFF(const size_t inputDimension, const vector<size_t>& _nNeuronsPerLayer) :
-	_numNeuronsPerLayer{ _nNeuronsPerLayer },
-	_numLayers{ _nNeuronsPerLayer.size() },
+NeuralNetworkFF :: NeuralNetworkFF(const size_t inputDimension, const vector<size_t>& nNeuronsPerLayer) :
+	_numNeuronsPerLayer{ nNeuronsPerLayer },
+	_numLayers{ nNeuronsPerLayer.size() },
 	_inputDimension{ inputDimension }
 {
 	// Resize vectors (each vector's element concerns a specific layer) 
@@ -157,13 +157,24 @@ vector<Real> NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) {
 
 void NeuralNetworkFF::PrintNetwork() {
 
-	// Print all weights and bias
+	// Print all index layer, weights and bias
 	size_t idxLayer{ 0 };
 	for (const auto& weightMatrix : _weightsPerLayer) {
 
-		cout << "Dim: " << weightMatrix.size1() << "x" << weightMatrix.size2() << endl;
-		cout << "Weights:" << endl;
-		for (auto i = 0; i < weightMatrix.size1(); i++) {
+		string layer;
+
+		if (idxLayer == _numLayers - 1)
+			layer = "Output";
+		else
+			layer = std::to_string(idxLayer + 1);
+
+		cout << "***************";
+		cout << "Layer: " << layer;
+		cout << "***************" << endl;
+
+		cout << "W dimensions: " << weightMatrix.size1() << "x" << weightMatrix.size2() << ", ";
+		cout << "weights: " << endl;
+		for (size_t i{ 0 }; i < weightMatrix.size1(); i++) {
 			for (auto j = 0; j < weightMatrix.size2(); j++)
 				cout << weightMatrix(i, j) << ' ';
 			cout << endl;
@@ -173,7 +184,10 @@ void NeuralNetworkFF::PrintNetwork() {
 		cout << "Bias:" << endl;
 		for (size_t i{ 0 }; i < _biasPerLayer[idxLayer].size1(); i++)
 			cout << _biasPerLayer[idxLayer](i, 0) << endl;
+		cout << endl;
 
+		cout << "The activation function: " << 
+			NameOfAFuncType(_activationFunctionPerLayer[idxLayer]) << endl;
 		cout << endl;
 
 		idxLayer++;
