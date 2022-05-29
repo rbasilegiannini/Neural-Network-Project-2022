@@ -18,6 +18,7 @@ NeuralNetworkFF :: NeuralNetworkFF(const size_t inputDimension, const vector<siz
 
 	size_t idxLayer{ 0 };
 	for (auto& weightMatrix : _weightsPerLayer) {
+		srand(time(0));
 
 		// Resize matrix and bias
 		if (idxLayer == 0)
@@ -28,15 +29,12 @@ NeuralNetworkFF :: NeuralNetworkFF(const size_t inputDimension, const vector<siz
 		_biasPerLayer[idxLayer].resize(_numNeuronsPerLayer[idxLayer], 1); // It's a column vector
 
 		// Random initialization of weights
-		srand(time(0));
-		for (auto i = 0; i < weightMatrix.size1(); i++) {
-			for (auto j = 0; j < weightMatrix.size2(); j++)
-				weightMatrix(i, j) = (Real)(((rand() % 21) - 10) * 0.1);	// Random value in [-1, 1] 
-		}
+		for (auto& w : weightMatrix.data()) 
+			w = (Real)(((rand() % 21) - 10) * 0.1);	// Random value in [-1, 1]
 
 		// Random initialization of bias 
-		for (size_t i{ 0 }; i < _biasPerLayer[idxLayer].size1(); i++)
-			_biasPerLayer[idxLayer](i, 0) = (Real)(((rand() % 21) - 10) * 0.1);	// Random value in [-1, 1]
+		for (auto& b : _biasPerLayer[idxLayer].data())
+			b = (Real)(((rand() % 21) - 10) * 0.1);	// Random value in [-1, 1]
 
 		idxLayer++;
 	}

@@ -16,7 +16,7 @@ using boost::numeric::ublas::matrix;
 int main() {
 
 	// Test network
-	const vector<size_t> _numNeuronsPerLayer{ 3, 1,4,5,6,7 };
+	const vector<size_t> _numNeuronsPerLayer{ 3, 1};
 	const vector<Real> input { 1, 1 };
 
 	NeuralNetworkFF net (2, _numNeuronsPerLayer);
@@ -44,7 +44,7 @@ int main() {
 	weights[1](0, 2) = -0.48749108;
 
 	for (size_t i{ 0 }; i < _numNeuronsPerLayer.size(); i++) {
-//		net.SetWeights(i, weights[i]);
+		net.SetWeights(i, weights[i]);
 
 		vector<Real> vecZero(_numNeuronsPerLayer[i], 0);
 		net.SetBias(i, vecZero);
