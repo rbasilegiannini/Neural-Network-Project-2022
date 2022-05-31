@@ -35,7 +35,7 @@ string NameOfAFuncType(const AFuncType type);
  */
 class ActivationFunction {
 public:
-	static map <AFuncType, function<Real(Real)>> AFunction;
+	static map <AFuncType, function<Real(const Real)>> AFunction;
 
 private:
 	ActivationFunction();

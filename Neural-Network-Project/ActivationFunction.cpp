@@ -2,20 +2,6 @@
 #include <cmath>
 #include "Utility.h"
 
-
-Real ActivationFunction::_sigmoid(const Real input) {
-return (Real)(1 / (1 + exp(-input)));
-}
-
-Real ActivationFunction::_identity(const Real input) {
-	return input;
-}
-
-map <AFuncType, function<Real(Real)>> ActivationFunction::AFunction = {
-	{AFuncType::SIGMOID, [](Real input) {return _sigmoid(input); }},
-	{AFuncType::IDENTITY, [](Real input) {return _identity(input); }}
-};
-
 string NameOfAFuncType(const AFuncType type) {
 
 	string name;
@@ -34,4 +20,17 @@ string NameOfAFuncType(const AFuncType type) {
 	}
 
 	return name;
+}
+
+map <AFuncType, function<Real(Real)>> ActivationFunction::AFunction = {
+	{AFuncType::SIGMOID, [](Real input) {return _sigmoid(input); }},
+	{AFuncType::IDENTITY, [](Real input) {return _identity(input); }}
+};
+
+Real ActivationFunction::_sigmoid(const Real input) {
+	return (Real)(1 / (1 + exp(-input)));
+}
+
+Real ActivationFunction::_identity(const Real input) {
+	return input;
 }

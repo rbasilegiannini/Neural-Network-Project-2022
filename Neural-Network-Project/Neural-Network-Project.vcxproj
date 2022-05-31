@@ -141,11 +141,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ActivationFunction.cpp" />
+    <ClCompile Include="ErrorFunction.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NeuralNetworkFF.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ActivationFunction.h" />
+    <ClInclude Include="ErrorFunction.h" />
     <ClInclude Include="NeuralNetworkFF.h" />
     <ClInclude Include="Utility.h" />
   </ItemGroup>

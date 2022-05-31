@@ -43,11 +43,11 @@ public:
 	vector<Real> ComputeNetwork(const vector<Real>& input);
 
 	/**
-		This function prints, for each layer:
-			- The index layer (from the first hidden layer to the output layer);
-	 		- The dimension and the values of the weights matrix;
-	 		- The bias column;
-			- The activation function.
+	 * This function prints, for each layer:
+	 *	- The index layer (from the first hidden layer to the output layer);
+	 *	- The dimension and the values of the weights matrix;
+	 *	- The bias column;
+	 *	- The activation function.
 	 * 
 	 */
 	void PrintNetwork();
