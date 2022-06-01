@@ -9,15 +9,15 @@ using boost::numeric::ublas::matrix;
 
 /**
  *
- * @brief Data structure of a multilayer Neural Network Feed Forward.
+ *	\brief Data structure of a multilayer Neural Network Feed Forward.
  *
  */
 class NeuralNetworkFF {
 public:
 
 	/**
-	 * Create a NN FF with random weights and bias. 
-	 * For all layers the default activation function is the sigmoid.
+	 *	Create a NN FF with random weights and bias. 
+	 *	For all layers the default activation function is the sigmoid.
 	 * 
 	 * \param	inputDimension is the input's dimension accepted by the network.
 	 * \param	nNeuronsPerLayer is the vector that contains the number of neurons for each layer.
@@ -34,7 +34,7 @@ public:
 	void SetBias(const size_t idxLayer, vector<Real>& newBias);
 
 	/**
-	 * This function computes the output of the network based on the current weights and bias.
+	 *	This function computes the output of the network based on the current weights and bias.
 	 * 
 	 * \param	input is the vector with real numbers of the input. This vector must have the same dimension of 
 	 *			the input of the network.
@@ -44,10 +44,10 @@ public:
 
 	/**
 		This function prints, for each layer:
-	 	- The index layer (from the first hidden layer to the output layer);
-	 	- The dimension and the values of the weights matrix;
-	 	- The bias column;
-	 	- The activation function.
+		- The index layer (from the first hidden layer to the output layer);
+		- The dimension and the values of the weights matrix;
+		- The bias column;
+		- The activation function.
 	 * 
 	 */
 	void PrintNetwork();
