@@ -16,7 +16,7 @@ struct DataFromNetwork {
 	const vector<size_t> numNeuronsPerLayer;
 	const vector<vector<Real>> activationsPerLayer;
 	const vector<matrix<Real>>  parameters;
-	const vector<function<Real(Real)>> AFunctionDerivativePerLayer;
+//	const vector<function<Real(Real)>> AFunctionDerivativePerLayer;
 };
 
 class BackPropagation {

@@ -4,7 +4,12 @@ vector<vector<Real>> BackPropagation::BProp(const DataFromNetwork& dataNN, const
 	
 	vector<vector<Real>> allDelta;
 
+	// Compute the output delta
+	vector<Real> deltaOutput;
+
+	for (size_t k{ 0 }; k < dataNN.numNeuronsPerLayer.back() - 1; k++) {
 	//
+	}
 
 	return allDelta;
 }
