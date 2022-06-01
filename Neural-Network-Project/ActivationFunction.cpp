@@ -27,10 +27,21 @@ map <AFuncType, function<Real(Real)>> ActivationFunction::AFunction = {
 	{AFuncType::IDENTITY, [](Real input) {return _identity(input); }}
 };
 
+map <AFuncType, function<Real(Real)>> ActivationFunction::AFunctionDerivative = {
+	{AFuncType::SIGMOID, [](Real input) {return _sigmoidDerivative(input); }},
+	{AFuncType::IDENTITY, [](Real input) {return 1; }}
+};
+
+
 Real ActivationFunction::_sigmoid(const Real input) {
 	return (Real)(1 / (1 + exp(-input)));
 }
 
 Real ActivationFunction::_identity(const Real input) {
 	return input;
+}
+
+Real ActivationFunction::_sigmoidDerivative(const Real input) {
+	auto derivative = _sigmoid(input) * (1 - _sigmoid(input));
+	return (derivative);
 }
