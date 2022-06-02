@@ -123,12 +123,18 @@ void NeuralNetworkFF::SetBias(const size_t idxLayer, vector<Real>& newBias) {
 	}
 }
 
-vector<Real> NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) {
+void NeuralNetworkFF::SetWeightPerNeuron(const size_t idxLayer, const size_t idxNeuron, const size_t idxConnection, const Real newWeight) {
+	_weightsPerLayer[idxLayer](idxNeuron, idxConnection) = newWeight;
+}
+
+NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) {
+
+	NetworkResult netResult;
 
 	// Check compatibility between the input's dimension and the network
 	if (input.size() != _inputDimension) {
 		cout << "[ERROR] The network is not compatible with the input's dimension." << endl;
-		return vector<Real>(_numNeuronsPerLayer.back(), 0);
+	//	return vector<Real>(_numNeuronsPerLayer.back(), 0);
 	}
 
 	vector<Real> result;
@@ -146,13 +152,17 @@ vector<Real> NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) {
 		outputLayer.resize(_numNeuronsPerLayer[idxLayer], 1);
 		for (size_t i{ 0 }; i < outputLayer.size1(); i++)
 			outputLayer(i, 0) = ActivationFunction::AFunction[_activationFunctionPerLayer[idxLayer]](activation(i,0));
+
+		// Fill the NetworkResult structure
+		netResult.activationsPerLayer.push_back(activation);
+		netResult.neuronsOutputPerLayer.push_back(outputLayer);
 	}
 
 	// Convert output matrix to std::vector
-	for (size_t i{ 0 }; i < outputLayer.size1(); i++)
-		result.push_back(outputLayer(i, 0));
+//	for (size_t i{ 0 }; i < outputLayer.size1(); i++)
+//		result.push_back(outputLayer(i, 0));
 
-	return result;
+	return netResult;
 }
 
 void NeuralNetworkFF::PrintNetwork() {

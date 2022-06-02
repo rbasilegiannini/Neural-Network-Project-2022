@@ -7,6 +7,17 @@
 using std::vector;
 using boost::numeric::ublas::matrix;
 
+
+/**
+ 	This data structure contains the result of the network computation:
+ 	- the neurons' output (a column vector for each layer)
+	- the neurons' activation (a column vector for each layer)
+ */
+struct NetworkResult {
+	vector<matrix<Real>> neuronsOutputPerLayer;
+	vector<matrix<Real>> activationsPerLayer;
+};
+
 /**
  *
  *	\brief Data structure of a multilayer Neural Network Feed Forward.
@@ -28,10 +39,12 @@ public:
 	size_t GetNumNeuronsPerLayer(const size_t idxLayer) { return _numNeuronsPerLayer[idxLayer]; }
 	matrix<Real> GetWeightsPerLayer(const size_t idxLayer) { return _weightsPerLayer[idxLayer]; }
 	matrix<Real> GetBiasPerLayer(const size_t idxLayer) { return _biasPerLayer[idxLayer]; }
+	AFuncType GetAFuncPerLayer(const size_t idxLayer) { return _activationFunctionPerLayer[idxLayer]; }
 
 	void SetActivationFunction(const size_t idxLayer, const AFuncType AFunctionType);
 	void SetWeights(const size_t idxLayer, const matrix<Real>& newWeights);
 	void SetBias(const size_t idxLayer, vector<Real>& newBias);
+	void SetWeightPerNeuron(const size_t idxLayer, const size_t idxNeuron, const size_t idxConnection, const Real newWeight);
 
 	/**
 	 *	This function computes the output of the network based on the current weights and bias.
@@ -40,7 +53,9 @@ public:
 	 *			the input of the network.
 	 * \return	A vector of reals that contains the result of the computation.
 	 */
-	vector<Real> ComputeNetwork(const vector<Real>& input);
+
+	//vector<Real> ComputeNetwork(const vector<Real>& input);
+	NetworkResult ComputeNetwork(const vector<Real>& input);
 
 	/**
 		This function prints, for each layer:
