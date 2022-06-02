@@ -8,17 +8,18 @@
 	This structure contains informations derived from the neural network:
 	- the number of layers;
 	- the number of neurons for each layer;
-	- the activation's values for each neurons (a vector for each layer);
+	- the activation's values for each neurons (a column vector for each layer);
 	- the parameters, not only weigths (a matrix of real for each layer);
 	- the activation function's derivative for each layer.
+	- the network outputs (a column vector)
  */
 struct DataFromNetwork {
 	const size_t numLayers;
 	const vector<size_t> numNeuronsPerLayer;
-	const vector<vector<Real>> activationsPerLayer;
+	const vector<matrix<Real>> activationsPerLayer;
 	const vector<matrix<Real>>  parameters;
 	const vector<AFuncType> AFunctionDerivativePerLayer;
-	const vector<Real> NNOutputs;
+	const matrix<Real> NNOutputs;
 };
 
 class BackPropagation {
