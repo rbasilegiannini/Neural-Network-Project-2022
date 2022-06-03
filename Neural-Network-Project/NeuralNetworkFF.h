@@ -40,6 +40,7 @@ public:
 	matrix<Real> GetWeightsPerLayer(const size_t idxLayer) { return _weightsPerLayer[idxLayer]; }
 	matrix<Real> GetBiasPerLayer(const size_t idxLayer) { return _biasPerLayer[idxLayer]; }
 	AFuncType GetAFuncPerLayer(const size_t idxLayer) { return _activationFunctionPerLayer[idxLayer]; }
+	matrix<Real> GetAllParamPerLayer(const size_t idxLayer) { return _allParamsPerLayer[idxLayer]; };
 
 	void SetActivationFunction(const size_t idxLayer, const AFuncType AFunctionType);
 	void SetWeights(const size_t idxLayer, const matrix<Real>& newWeights);
@@ -73,6 +74,7 @@ private:
 	const vector<size_t> _numNeuronsPerLayer;   
 	vector<matrix<Real>> _weightsPerLayer;
 	vector<matrix<Real>> _biasPerLayer;
+	vector<matrix<Real>> _allParamsPerLayer;
 	vector<AFuncType> _activationFunctionPerLayer;
 };
 

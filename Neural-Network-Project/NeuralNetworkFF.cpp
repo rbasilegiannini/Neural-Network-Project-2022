@@ -16,27 +16,44 @@ NeuralNetworkFF :: NeuralNetworkFF(const size_t inputDimension, const vector<siz
 	_biasPerLayer.resize(_numLayers);
 	_activationFunctionPerLayer.resize(_numLayers);
 
-	size_t idxLayer{ 0 };
+	size_t layer{ 0 };
 	for (auto& weightMatrix : _weightsPerLayer) {
 		srand(time(0));
 
 		// Resize matrix and bias
-		if (idxLayer == 0)
-			weightMatrix.resize(_numNeuronsPerLayer[idxLayer], _inputDimension);
+		if (layer == 0)
+			weightMatrix.resize(_numNeuronsPerLayer[layer], _inputDimension);
 		else
-			weightMatrix.resize(_numNeuronsPerLayer[idxLayer], _numNeuronsPerLayer[idxLayer - 1]);
+			weightMatrix.resize(_numNeuronsPerLayer[layer], _numNeuronsPerLayer[layer - 1]);
 
-		_biasPerLayer[idxLayer].resize(_numNeuronsPerLayer[idxLayer], 1); // It's a column vector
+		_biasPerLayer[layer].resize(_numNeuronsPerLayer[layer], 1); // It's a column vector
 
 		// Random initialization of weights
 		for (auto& w : weightMatrix.data()) 
 			w = (Real)(((rand() % 21) - 10) * 0.1);	// Random value in [-1, 1]
 
 		// Random initialization of bias 
-		for (auto& b : _biasPerLayer[idxLayer].data())
+		for (auto& b : _biasPerLayer[layer].data())
 			b = (Real)(((rand() % 21) - 10) * 0.1);	// Random value in [-1, 1]
 
-		idxLayer++;
+		// Set allParams matrices
+		size_t numNeurons = _numNeuronsPerLayer[layer];		// All neurons
+		size_t numParams = _weightsPerLayer[layer].size2() + 1;	// All weights + bias
+		matrix<Real> params(numNeurons, numParams);
+
+		//	First columns ~> biases
+		for (size_t i{ 0 }; i < params.size1(); i++)
+			params(i, 0) = _biasPerLayer[layer](i, 0);
+
+		//	Remaining columns ~> weights
+		for (size_t i{ 0 }; i < params.size1(); i++) {
+			for (size_t j{ 1 }; j < params.size2(); j++)
+				params(i, j) = _weightsPerLayer[layer](i, j - 1);
+		}
+
+		_allParamsPerLayer.push_back(params);
+
+		layer++;
 	}
 
 	// Default activation functions: SIGMOID
@@ -54,10 +71,14 @@ void NeuralNetworkFF::SetWeights(const size_t idxLayer, const matrix<Real>& newW
 	// Tool to partially or totally copy a matrix
 	auto copyNewMatrix = [&](const size_t rows, const size_t cols){
 
-			for (size_t i{ 0 }; i < rows; i++) {
-				for (size_t j{ 0 }; j < cols; j++)
-					_weightsPerLayer[idxLayer](i, j) = newWeights(i, j);
+		for (size_t i{ 0 }; i < rows; i++) {
+			for (size_t j{ 0 }; j < cols; j++) {
+				_weightsPerLayer[idxLayer](i, j) = newWeights(i, j);
+
+				// j+1 because first column are reserved for biases
+				_allParamsPerLayer[idxLayer](i, j + 1) = newWeights(i, j);	
 			}
+		}
 	};
 
 	/* 
@@ -112,14 +133,18 @@ void NeuralNetworkFF::SetBias(const size_t idxLayer, vector<Real>& newBias) {
 	if (newBias.size() > _numNeuronsPerLayer[idxLayer]) {
 
 		// Only first _numNeuronsPerLayer[idxLayer] elements are set
-		for (size_t i{ 0 }; i < _numNeuronsPerLayer[idxLayer]; i++)
+		for (size_t i{ 0 }; i < _numNeuronsPerLayer[idxLayer]; i++) {
 			_biasPerLayer[idxLayer](i, 0) = newBias[i];
+			_allParamsPerLayer[idxLayer](i, 0) = newBias[i];
+		}
 	}
 	else {
 
 		// Only first newBias.size() elements are set
-		for (size_t i{ 0 }; i < newBias.size(); i++)
+		for (size_t i{ 0 }; i < newBias.size(); i++) {
 			_biasPerLayer[idxLayer](i, 0) = newBias[i];
+			_allParamsPerLayer[idxLayer](i, 0) = newBias[i];
+		}
 	}
 }
 
@@ -139,28 +164,42 @@ NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) {
 
 	vector<Real> result;
 	matrix<Real> activation;
-	matrix<Real> outputLayer (input.size(), 1);	// It's a column vector
+	vector<Real> input_with_bias;
+	input_with_bias.push_back(1); // First element is 1, because we have to consider also bias dimension
 
-	// OutputLayer initialization
-	for (size_t i{ 0 }; i < outputLayer.size1(); i++)	
-		outputLayer(i, 0) = input[i];
+	for (const auto& i : input)
+		input_with_bias.push_back(i);
 
-	for (size_t idxLayer{ 0 }; idxLayer < _numLayers; idxLayer++) {
-		activation = prod(_weightsPerLayer[idxLayer], outputLayer) + _biasPerLayer[idxLayer];
+	matrix<Real> outputLayer(input_with_bias.size(), 1);	// It's a column vector
+
+	//	OutputLayer initialization
+	for (size_t i{ 0 }; i < input_with_bias.size(); i++)
+		outputLayer(i, 0) = input_with_bias[i];
+
+	//	From the input layer to the last hidden layer
+	for (size_t layer{ 0 }; layer < _numLayers - 1; layer++) {
+		activation = prod(_allParamsPerLayer[layer], outputLayer);
 
 		// Compute the output layer
-		outputLayer.resize(_numNeuronsPerLayer[idxLayer], 1);
-		for (size_t i{ 0 }; i < outputLayer.size1(); i++)
-			outputLayer(i, 0) = ActivationFunction::AFunction[_activationFunctionPerLayer[idxLayer]](activation(i,0));
+		outputLayer.resize(_numNeuronsPerLayer[layer] + 1, 1);
+		outputLayer(0, 0) = 1;	//	For the bias
+		for (size_t idxNeuron{ 0 }; idxNeuron < activation.size1(); idxNeuron++)
+			outputLayer(idxNeuron+1, 0) = ActivationFunction::AFunction[_activationFunctionPerLayer[layer]](activation(idxNeuron, 0));
 
 		// Fill the NetworkResult structure
 		netResult.activationsPerLayer.push_back(activation);
 		netResult.neuronsOutputPerLayer.push_back(outputLayer);
 	}
 
-	// Convert output matrix to std::vector
-//	for (size_t i{ 0 }; i < outputLayer.size1(); i++)
-//		result.push_back(outputLayer(i, 0));
+	//	For the output layer: compute the output network
+	activation = prod(_allParamsPerLayer[_numLayers - 1], outputLayer);
+	outputLayer.resize(_numNeuronsPerLayer[_numLayers - 1], 1);
+
+	for (size_t idxNeuron{ 0 }; idxNeuron < outputLayer.size1(); idxNeuron++)
+		outputLayer(idxNeuron, 0) = ActivationFunction::AFunction[_activationFunctionPerLayer[_numLayers - 1]](activation(idxNeuron, 0));
+
+	netResult.activationsPerLayer.push_back(activation);
+	netResult.neuronsOutputPerLayer.push_back(outputLayer);
 
 	return netResult;
 }
