@@ -45,10 +45,10 @@ Real ErrorFunction::_sumOfSquares(const vector<Real>& NNOutput, const vector<Rea
 	for (size_t idxOutput{ 0 }; idxOutput < NNOutput.size(); idxOutput++) 
 		error += pow(NNOutput[idxOutput] - targets[idxOutput], 2);
 
-	return error;
+	return error/2;
 }
 
 Real ErrorFunction::_sumOfSquaresDer_RespectOutput(const Real neuronOutput, const Real target) {
-	return (2 * (neuronOutput - target));
+	return (neuronOutput - target);
 }
 
