@@ -149,7 +149,8 @@ void NeuralNetworkFF::SetBias(const size_t idxLayer, vector<Real>& newBias) {
 }
 
 void NeuralNetworkFF::SetWeightPerNeuron(const size_t idxLayer, const size_t idxNeuron, const size_t idxConnection, const Real newWeight) {
-	_weightsPerLayer[idxLayer](idxNeuron, idxConnection) = newWeight;
+//	_weightsPerLayer[idxLayer](idxNeuron, idxConnection) = newWeight;
+	_allParamsPerLayer[idxLayer](idxNeuron, idxConnection) = newWeight;
 }
 
 NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) {

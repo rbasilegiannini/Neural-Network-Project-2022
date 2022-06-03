@@ -9,4 +9,4 @@
 /**
  * @brief \a Real has the \a float precision. 
  */
-typedef double Real;
+typedef float Real;

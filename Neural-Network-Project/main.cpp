@@ -20,47 +20,85 @@ using boost::numeric::ublas::matrix;
 int main() {
 
 
-	const vector<size_t> _numNeuronsPerLayer{ 3, 1};
+	const vector<size_t> _numNeuronsPerLayer{ 3, 1, 1};
 	const vector<Real> input { 1, 1 };
 
 	NeuralNetworkFF net (2, _numNeuronsPerLayer);
 
-	vector<matrix<Real>> weights(2);
+	vector<matrix<Real>> weights(3);
 	weights[0].resize(3, 2);
 	weights[1].resize(1, 3);
+	weights[2].resize(1, 1);
+
 	Real add{ 0 };
-	// W1
-	weights[0](0, 0) = -0.66016222 + add;
-	weights[0](0, 1) = 0.77883251 + add;
 
-	weights[0](1, 0) = 0.02856532 + add;
-	weights[0](1, 1) = 0.1876014 + add;
+	///
+	weights[0](0, 0) = -0.6 + add;
+	weights[0](0, 1) = 0.7 + add;
 
-	weights[0](2, 0) = -0.65833175 + add;
-	weights[0](2, 1) = -0.43713064 + add;
+	weights[0](1, 0) = 0.02 + add;
+	weights[0](1, 1) = 0.2 + add;
+
+	weights[0](2, 0) = -0.6 + add;
+	weights[0](2, 1) = -0.4 + add;
 
 	// W2
-	weights[1](0, 0) = -0.86631423 + add;
-	weights[1](0, 1) = -0.2239644 + add;
-	weights[1](0, 2) = -0.48749108 + add;
+	weights[1](0, 0) = -0.8 + add;
+	weights[1](0, 1) = -0.2 + add;
+	weights[1](0, 2) = -0.4 + add;
+
+	// W3
+	weights[2](0, 0) = 0.6 + add;
 
 	for (size_t i{ 0 }; i < _numNeuronsPerLayer.size(); i++) {
-//		net.SetWeights(i, weights[i]);
+		net.SetWeights(i, weights[i]);
 
 		vector<Real> vecZero(_numNeuronsPerLayer[i], 0);
 		net.SetBias(i, vecZero);	// Bias to zero
 	}
 
-//	net.PrintNetwork();
+	net.PrintNetwork();
+
+	auto params0 = net.GetAllParamPerLayer(0);
+	auto params1 = net.GetAllParamPerLayer(1);
+
+	for (size_t i = 0; i < params0.size1(); i++) {
+		for (size_t j = 0; j < params0.size2(); j++)
+			cout << params0(i, j) << ' ';
+		cout << endl;
+	}
+	cout << endl;
+
+	for (size_t i = 0; i < params1.size1(); i++) {
+		for (size_t j = 0; j < params1.size2(); j++)
+			cout << params1(i, j) << ' ';
+		cout << endl;
+	}
+	cout << endl;
+
 
 #pragma region	Test compute network	
-/*
-	auto result = net.ComputeNetwork(input);	// NetOutput = 0.33
-	for (int i = 0; i < result.neuronsOutputPerLayer.back().size1(); i++)
-		cout << result.neuronsOutputPerLayer.back()(i,0) << ' ';
+/* *
+	auto result = net.ComputeNetwork(input);	// NetOutput = 0.5516
+
+	for (int layer = 0; layer < net.GetNumLayers(); layer++) {
+		cout << "Output layer " << layer << ": ";
+		for (int i = 0; i < result.neuronsOutputPerLayer[layer].size1(); i++)
+			cout << result.neuronsOutputPerLayer[layer](i, 0) << ' ';
+
+		cout << endl;
+	}
+
+	for (int layer = 0; layer < net.GetNumLayers(); layer++) {
+		cout << "Activation layer " << layer << ": ";
+		for (int i = 0; i < result.activationsPerLayer[layer].size1(); i++)
+			cout << result.activationsPerLayer[layer](i, 0) << ' ';
+
+		cout << endl;
+	}
 
 	cout << endl;
-*/
+/**/
 #pragma endregion
 
 #pragma region Test EFunc (Sum of squares)
@@ -92,7 +130,7 @@ int main() {
 #pragma endregion
 
 #pragma region Test Gradient computation
-	 
+/**/
 	// FP step
 	auto netResult = net.ComputeNetwork(input);
 	auto activationsPerLayer = netResult.activationsPerLayer;
@@ -106,8 +144,7 @@ int main() {
 	for (size_t i = 0; i < net.GetNumLayers(); i++) {	// For each layer
 		allNeuronsNumber.push_back(net.GetNumNeuronsPerLayer(i));
 		allAFunc.push_back(net.GetAFuncPerLayer(i));
-		paramsPerLayer.push_back(net.GetWeightsPerLayer(i)); // Only weights
-		
+		paramsPerLayer.push_back(net.GetAllParamPerLayer(i)); // Weights and biases
 	}
 
 	DataFromNetwork dataNN{
@@ -119,7 +156,10 @@ int main() {
 		neuronsOutputPerLayer.back()
 	};
 	
-	vector<Real> target{ 1 };
+	vector<Real> target(_numNeuronsPerLayer.back());
+	for (size_t v{ 0 }; v < target.size(); v++)
+		target[v] = v + 1;
+
 	vector<vector<Real>> allDelta = BackPropagation::BProp(dataNN, ErrorFuncType::SUMOFSQUARES, target);
 
 	cout << "Deltas: " << endl;
@@ -143,6 +183,11 @@ int main() {
 	}
 
 	vector<Real> gradE;
+	vector<Real> input_with_bias;
+	input_with_bias.push_back(1); // First element is 1, because we have to consider also bias dimension
+
+	for (const auto& i : input)
+		input_with_bias.push_back(i);
 
 	//	From input layer to the Output layer
 	for (size_t layer = 0; layer < net.GetNumLayers(); layer++) {
@@ -153,9 +198,9 @@ int main() {
 
 				//	Compute dE/dw_ij
 				if (layer == 0)
-					d_E_ij = allDelta[layer][idxNeuron] * input[idxConnection];
+					d_E_ij = allDelta[layer][idxNeuron] * input_with_bias[idxConnection];
 				else
-					d_E_ij = allDelta[layer][idxNeuron] * neuronsOutputPerLayer[layer - 1](idxConnection);
+					d_E_ij = allDelta[layer][idxNeuron] * neuronsOutputPerLayer[layer - 1](idxConnection, 0);
 
 				gradE.push_back(d_E_ij);
 			}
@@ -164,28 +209,14 @@ int main() {
 
 	// Test Gradient Checking 
 
-	/**
-	 * Prendo questi 9 parametri. Ogni parametro lo perturbo con epsilon, uno alla volta. Ad ogni perturbazione,
-	 * calcolo l'output della rete. Misuro l'errore. Calcolo la differenza dell'errore con perturbazione meno l'errore
-	 * senza perturbazione e divido per 2epsilon.
-	 * 
-	 * \return 
-	 */
-
 	vector<Real> gradE_checking;
-	Real e = 0.0001;
-
-	cout << "Default network: " << endl;
-	net.PrintNetwork();
+	Real e = 0.01;
 
 	//	From input layer to the Output layer
 	for (size_t layer = 0; layer < net.GetNumLayers(); layer++) {
 
 		for (size_t idxNeuron = 0; idxNeuron < paramsPerLayer[layer].size1(); idxNeuron++) {
 			for (size_t idxConnection = 0; idxConnection < paramsPerLayer[layer].size2(); idxConnection++) {
-
-				cout << "Default network (l: " << layer << ", n: " << idxNeuron << ", c: " << idxConnection << "): " << endl;
-				net.PrintNetwork();
 
 				Real d_E_ij;
 				Real originalParam = paramsPerLayer[layer](idxNeuron, idxConnection);
@@ -205,9 +236,6 @@ int main() {
 
 				auto error_plus = ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](output_plus, target);
 
-				cout << "[+]Change weight (" << idxNeuron << "," << idxConnection << ") of layer " << layer << ". New NN: " << endl;
-				net.PrintNetwork();
-
 				// Compute output_minus
 				net.SetWeightPerNeuron(layer, idxNeuron, idxConnection, param_minus_e);
 				auto temp_minus = net.ComputeNetwork(input).neuronsOutputPerLayer.back();
@@ -217,9 +245,6 @@ int main() {
 					output_minus[i] = temp_minus(i, 0);
 
 				auto error_minus = ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](output_minus, target);
-
-				cout << "[-]Change weight (" << idxNeuron << "," << idxConnection << ") of layer " << layer << ". New NN: " << endl;
-				net.PrintNetwork();
 
 				//	Compute dE/dw_ij
 				d_E_ij = (error_plus - error_minus) / (2 * e);
@@ -261,9 +286,8 @@ int main() {
 
 	cout << "The difference: " << (difference_num / difference_denum) << endl;
 
-
 	cout << endl;
-
+/**/
 #pragma endregion
 
 }

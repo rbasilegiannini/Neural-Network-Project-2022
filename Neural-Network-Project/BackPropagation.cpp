@@ -5,7 +5,7 @@ using std::deque;
 
 vector<vector<Real>> BackPropagation::BProp(const DataFromNetwork& dataNN, const ErrorFuncType EFuncType, const vector<Real>& targets) {
 	
-	deque<vector<Real>> allDelta;
+	deque<vector<Real>> allDelta(dataNN.numLayers);
 
 	//	Compute the output delta
 	vector<Real> deltaOutput;
@@ -22,7 +22,7 @@ vector<vector<Real>> BackPropagation::BProp(const DataFromNetwork& dataNN, const
 		deltaOutput.push_back(AFuncDer_k(a_k) * EFuncDer_k(y_k, t_k));
 	}
 
-	allDelta.push_front(deltaOutput);
+	*(allDelta.end()-1) = deltaOutput;
 
 	//	Compute the internal delta
 
@@ -30,7 +30,7 @@ vector<vector<Real>> BackPropagation::BProp(const DataFromNetwork& dataNN, const
 	for (int layer = (int)(dataNN.numLayers - 1) - 1; layer > -1; layer--) {
 
 		vector<Real> delta_i;
-		allDelta.push_front(delta_i);	// delta_i is empty. 
+		*allDelta.begin() = delta_i;	// delta_i is empty. 
 
 		AFuncType = dataNN.AFunctionDerivativePerLayer[layer];
 
@@ -42,8 +42,14 @@ vector<vector<Real>> BackPropagation::BProp(const DataFromNetwork& dataNN, const
 
 			//	Compute the summation, for all the neurons of the next layer
 			Real summation{ 0 };
-			for (size_t forwardConnection{ 0 }; forwardConnection < dataNN.numNeuronsPerLayer[layer + 1]; forwardConnection++)
+			for (size_t forwardConnection{ 0 }; forwardConnection < dataNN.numNeuronsPerLayer[layer + 1]; forwardConnection++) {
+
+				/** DEBUG */
+				auto data1 = dataNN.parameters[layer + 1](forwardConnection, idxNeuron);
+				auto data2 = allDelta[layer + 1][forwardConnection];
+				/** */
 				summation += dataNN.parameters[layer + 1](forwardConnection, idxNeuron) * allDelta[layer + 1][forwardConnection];
+			}
 			
 			delta_i.push_back(AFuncDer_i(a_i) * summation);
 		}
