@@ -6,7 +6,7 @@ using std::deque;
 vector<vector<Real>> BackPropagation::BProp(const DataFromNetwork& dataNN, const ErrorFuncType EFuncType, const vector<Real>& targets) {
 	
 	deque<vector<Real>> allDelta(dataNN.numLayers);
-
+	
 	//	Compute the output delta
 	vector<Real> deltaOutput;
 
@@ -42,8 +42,8 @@ vector<vector<Real>> BackPropagation::BProp(const DataFromNetwork& dataNN, const
 
 			//	Compute the summation, for all the neurons of the next layer
 			Real summation{ 0 };
+			//for (size_t forwardConnection{ 0 }; forwardConnection < dataNN.numNeuronsPerLayer[layer + 1]; forwardConnection++) {
 			for (size_t forwardConnection{ 0 }; forwardConnection < dataNN.numNeuronsPerLayer[layer + 1]; forwardConnection++) {
-
 				/** DEBUG */
 				auto data1 = dataNN.parameters[layer + 1](forwardConnection, idxNeuron);
 				auto data2 = allDelta[layer + 1][forwardConnection];
