@@ -45,7 +45,7 @@ public:
 	void SetActivationFunction(const size_t idxLayer, const AFuncType AFunctionType);
 	void SetWeights(const size_t idxLayer, const matrix<Real>& newWeights);
 	void SetBias(const size_t idxLayer, vector<Real>& newBias);
-	void SetWeightPerNeuron(const size_t idxLayer, const size_t idxNeuron, const size_t idxConnection, const Real newWeight);
+	void SetParamPerNeuron(const size_t idxLayer, const size_t idxNeuron, const size_t idxConnection, const Real newWeight);
 
 	/**
 	 *	This function computes the output of the network based on the current weights and bias.

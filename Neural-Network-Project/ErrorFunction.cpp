@@ -15,8 +15,6 @@ map<ErrorFuncType, function<Real(const Real, const Real)>> ErrorFunction::EFunct
 
 };
 
-
-
 string NameOfErrorFuncType(const ErrorFuncType type) {
 
 	string name;

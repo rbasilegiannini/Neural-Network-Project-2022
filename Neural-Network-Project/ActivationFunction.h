@@ -35,11 +35,12 @@ string NameOfAFuncType(const AFuncType type);
  */
 class ActivationFunction {
 public:
+	ActivationFunction() = delete;
+
 	static map <AFuncType, function<Real(const Real)>> AFunction;
 	static map <AFuncType, function<Real(const Real)>> AFunctionDerivative;
 
 private:
-	ActivationFunction();
 	static Real _sigmoid(const Real input);
 	static Real _identity(const Real input);
 	static Real _sigmoidDerivative(const Real input);

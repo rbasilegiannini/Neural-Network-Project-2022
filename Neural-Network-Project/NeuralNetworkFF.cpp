@@ -45,12 +45,12 @@ NeuralNetworkFF :: NeuralNetworkFF(const size_t inputDimension, const vector<siz
 		matrix<Real> params(numNeurons, numParams);
 
 		//	First columns ~> biases
-		for (size_t i{ 0 }; i < params.size1(); i++)
+		for (const auto& i : RangeGen(0, params.size1()))
 			params(i, 0) = _biasPerLayer[layer](i, 0);
 
 		//	Remaining columns ~> weights
-		for (size_t i{ 0 }; i < params.size1(); i++) {
-			for (size_t j{ 1 }; j < params.size2(); j++)
+		for (const auto& i : RangeGen(0, params.size1())) {
+			for (const auto& j : RangeGen(1, params.size2()))
 				params(i, j) = _weightsPerLayer[layer](i, j - 1);
 		}
 
@@ -74,8 +74,9 @@ void NeuralNetworkFF::SetWeights(const size_t idxLayer, const matrix<Real>& newW
 	// Tool to partially or totally copy a matrix
 	auto copyNewMatrix = [&](const size_t rows, const size_t cols){
 
-		for (size_t i{ 0 }; i < rows; i++) {
-			for (size_t j{ 0 }; j < cols; j++) {
+		for (const auto& i : RangeGen(0, rows)) {
+			for (const auto& j : RangeGen(0, cols)) {
+
 				_weightsPerLayer[idxLayer](i, j) = newWeights(i, j);
 
 				// j+1 because first column are reserved for biases
@@ -136,7 +137,7 @@ void NeuralNetworkFF::SetBias(const size_t idxLayer, vector<Real>& newBias) {
 	if (newBias.size() > _numNeuronsPerLayer[idxLayer]) {
 
 		// Only first _numNeuronsPerLayer[idxLayer] elements are set
-		for (size_t i{ 0 }; i < _numNeuronsPerLayer[idxLayer]; i++) {
+		for (const auto& i : RangeGen (0, _numNeuronsPerLayer[idxLayer])) {
 			_biasPerLayer[idxLayer](i, 0) = newBias[i];
 			_allParamsPerLayer[idxLayer](i, 0) = newBias[i];
 		}
@@ -144,16 +145,18 @@ void NeuralNetworkFF::SetBias(const size_t idxLayer, vector<Real>& newBias) {
 	else {
 
 		// Only first newBias.size() elements are set
-		for (size_t i{ 0 }; i < newBias.size(); i++) {
+		for (const auto& i : RangeGen(0, newBias.size())) { 
 			_biasPerLayer[idxLayer](i, 0) = newBias[i];
 			_allParamsPerLayer[idxLayer](i, 0) = newBias[i];
 		}
 	}
 }
 
-void NeuralNetworkFF::SetWeightPerNeuron(const size_t idxLayer, const size_t idxNeuron, const size_t idxConnection, const Real newWeight) {
-//	_weightsPerLayer[idxLayer](idxNeuron, idxConnection) = newWeight;
+void NeuralNetworkFF::SetParamPerNeuron(const size_t idxLayer, const size_t idxNeuron, const size_t idxConnection, const Real newWeight) {
 	_allParamsPerLayer[idxLayer](idxNeuron, idxConnection) = newWeight;
+
+	if (idxConnection > 0 && idxConnection < _weightsPerLayer[idxLayer].size2())
+		_weightsPerLayer[idxLayer](idxNeuron, idxConnection) = newWeight;
 }
 
 NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) {
@@ -166,7 +169,6 @@ NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) {
 	//	return vector<Real>(_numNeuronsPerLayer.back(), 0);
 	}
 
-	vector<Real> result;
 	matrix<Real> activation;
 	vector<Real> input_with_bias;
 	input_with_bias.push_back(1); // First element is 1, because we have to consider also bias dimension
@@ -177,17 +179,18 @@ NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) {
 	matrix<Real> outputLayer(input_with_bias.size(), 1);	// It's a column vector
 
 	//	OutputLayer initialization
-	for (size_t i{ 0 }; i < input_with_bias.size(); i++)
+	for (const auto& i : RangeGen(0, input_with_bias.size()))
 		outputLayer(i, 0) = input_with_bias[i];
 
 	//	From the input layer to the last hidden layer
-	for (size_t layer{ 0 }; layer < _numLayers - 1; layer++) {
+	for (const auto& layer : RangeGen(0, _numLayers - 1)) {
 		activation = prod(_allParamsPerLayer[layer], outputLayer);
 
 		// Compute the output layer
 		outputLayer.resize(_numNeuronsPerLayer[layer] + 1, 1);
 		outputLayer(0, 0) = 1;	//	For the bias
-		for (size_t idxNeuron{ 0 }; idxNeuron < activation.size1(); idxNeuron++)
+		
+		for (const auto& idxNeuron : RangeGen(0, activation.size1()))
 			outputLayer(idxNeuron+1, 0) = ActivationFunction::AFunction[_activationFunctionPerLayer[layer]](activation(idxNeuron, 0));
 
 		// Fill the NetworkResult structure
@@ -201,7 +204,7 @@ NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) {
 	activation = prod(_allParamsPerLayer[_numLayers - 1], outputLayer);
 	outputLayer.resize(_numNeuronsPerLayer[_numLayers - 1], 1);
 
-	for (size_t idxNeuron{ 0 }; idxNeuron < outputLayer.size1(); idxNeuron++)
+	for (const auto& idxNeuron : RangeGen(0, activation.size1()))
 		outputLayer(idxNeuron, 0) = ActivationFunction::AFunction[_activationFunctionPerLayer[_numLayers - 1]](activation(idxNeuron, 0));
 
 	netResult.activationsPerLayer.push_back(activation);
@@ -229,15 +232,15 @@ void NeuralNetworkFF::PrintNetwork() {
 
 		cout << "W dimensions: " << weightMatrix.size1() << "x" << weightMatrix.size2() << ", ";
 		cout << "weights: " << endl;
-		for (size_t i{ 0 }; i < weightMatrix.size1(); i++) {
-			for (auto j = 0; j < weightMatrix.size2(); j++)
+		for (const auto& i : RangeGen(0, weightMatrix.size1())) {
+			for (const auto& j : RangeGen(0, weightMatrix.size2()))
 				cout << weightMatrix(i, j) << ' ';
 			cout << endl;
 		}
 		cout << endl;
 
 		cout << "Bias:" << endl;
-		for (size_t i{ 0 }; i < _biasPerLayer[idxLayer].size1(); i++)
+		for (const auto& i : RangeGen(0, _biasPerLayer[idxLayer].size1()))
 			cout << _biasPerLayer[idxLayer](i, 0) << endl;
 		cout << endl;
 

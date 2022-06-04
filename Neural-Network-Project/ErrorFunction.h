@@ -31,11 +31,12 @@ string NameOfErrorFuncType(const ErrorFuncType type);
  */
 class ErrorFunction {
 public:
+	ErrorFunction() = delete;
+
 	static map <ErrorFuncType, function<Real(const vector<Real>& , const vector<Real>&)>> EFunction;
 	static map <ErrorFuncType, function<Real(const Real, const Real)>> EFunctionDer_RespectOutput;
 
 private:
-	ErrorFunction();
 	static Real _sumOfSquares(const vector<Real>& NNOutput, const vector<Real>& targets);
 	static Real _sumOfSquaresDer_RespectOutput(const Real neuronOutput, const Real target);
 

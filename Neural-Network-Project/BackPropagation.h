@@ -26,6 +26,7 @@ struct DataFromNetwork {
 
 class BackPropagation {
 public:
+	BackPropagation() = delete;
 
 	/**
 	 * This function computes a vector of delta_i, where i = 1, ..., OutputLayer.
