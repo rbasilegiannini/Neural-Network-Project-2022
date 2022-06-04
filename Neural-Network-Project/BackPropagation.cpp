@@ -73,7 +73,7 @@ vector<Real> BackPropagation::BProp(const DataFromNetwork& dataNN, const ErrorFu
 				if (layer == 0)
 					dE_dparm = allDelta[layer][idxNeuron] * dataNN.NNinput[idxConnection];
 				else
-					dE_dparm = allDelta[layer][idxNeuron] * dataNN.neuronsOutputPerLayer[layer - 1](idxConnection + 1, 0);
+					dE_dparm = allDelta[layer][idxNeuron] * dataNN.neuronsOutputPerLayer[layer - 1](idxConnection, 0);
 
 				gradE.push_back(dE_dparm);
 			}

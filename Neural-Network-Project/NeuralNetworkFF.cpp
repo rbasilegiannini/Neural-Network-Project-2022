@@ -2,9 +2,12 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
+#include <boost/numeric/ublas/matrix_proxy.hpp>
+
 
 using std::cout;
 using std::endl;
+using boost::numeric::ublas::subrange;
 
 NeuralNetworkFF :: NeuralNetworkFF(const size_t inputDimension, const vector<size_t>& nNeuronsPerLayer) :
 	_numNeuronsPerLayer{ nNeuronsPerLayer },
@@ -189,7 +192,9 @@ NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) {
 
 		// Fill the NetworkResult structure
 		netResult.activationsPerLayer.push_back(activation);
-		netResult.neuronsOutputPerLayer.push_back(outputLayer);
+		netResult.neuronsOutputPerLayer.push_back(
+			subrange(outputLayer, 1, outputLayer.size1(), 0, outputLayer.size2())
+		);
 	}
 
 	//	For the output layer: compute the output network
