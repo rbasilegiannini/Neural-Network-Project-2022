@@ -5,9 +5,11 @@
 #include "NeuralNetworkFF.h"
 #include "ErrorFunction.h"
 #include "BackPropagation.h"
+#include "TestFunction.h"
 
 #include <vector>
 #include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <functional>
 #include <numeric>
 
@@ -15,11 +17,14 @@ using std::cout;
 using std::endl;
 using std::vector;
 using boost::numeric::ublas::matrix;
+using boost::numeric::ublas::subrange;
 
+#include <chrono>
+#include <thread>
+using namespace std::chrono;
 
 int main() {
-
-
+/*
 	const vector<size_t> _numNeuronsPerLayer{ 3, 1, 1};
 	const vector<Real> input { 1, 1 };
 
@@ -57,8 +62,8 @@ int main() {
 		net.SetBias(i, vecZero);	// Bias to zero
 	}
 
-	net.PrintNetwork();
-
+//	net.PrintNetwork();
+/*
 	auto params0 = net.GetAllParamPerLayer(0);
 	auto params1 = net.GetAllParamPerLayer(1);
 
@@ -75,7 +80,7 @@ int main() {
 		cout << endl;
 	}
 	cout << endl;
-
+*/
 
 #pragma region	Test compute network	
 /* *
@@ -130,7 +135,7 @@ int main() {
 #pragma endregion
 
 #pragma region Test Gradient computation
-/**/
+/**
 	// FP step
 	auto netResult = net.ComputeNetwork(input);
 	auto activationsPerLayer = netResult.activationsPerLayer;
@@ -139,95 +144,134 @@ int main() {
 	// BP step
 	vector<size_t> allNeuronsNumber;
 	vector<AFuncType> allAFunc;
-	vector<matrix<Real>> paramsPerLayer;
+	vector<matrix<Real>> weightsPerLayer;
 
 	for (size_t i = 0; i < net.GetNumLayers(); i++) {	// For each layer
 		allNeuronsNumber.push_back(net.GetNumNeuronsPerLayer(i));
 		allAFunc.push_back(net.GetAFuncPerLayer(i));
-		paramsPerLayer.push_back(net.GetAllParamPerLayer(i)); // Weights and biases
+		weightsPerLayer.push_back(net.GetWeightsPerLayer(i));
 	}
 
 	DataFromNetwork dataNN{
 		net.GetNumLayers(),
 		allNeuronsNumber,
 		activationsPerLayer,
-		paramsPerLayer,
+		weightsPerLayer,
 		allAFunc,
-		neuronsOutputPerLayer.back()
+		neuronsOutputPerLayer,
+		input
 	};
 	
 	vector<Real> target(_numNeuronsPerLayer.back());
 	for (size_t v{ 0 }; v < target.size(); v++)
-		target[v] = v + 1;
+		target[v] = 1;
 
-	vector<vector<Real>> allDelta = BackPropagation::BProp(dataNN, ErrorFuncType::SUMOFSQUARES, target);
+	auto gradE = BackPropagation::BProp(dataNN, ErrorFuncType::SUMOFSQUARES, target);
 
-	cout << "Deltas: " << endl;
-	for (const auto& vecD : allDelta) {
-		for (const auto& d : vecD) {
-			cout << d << ' ';
+	bool test = Test_GradientChecking(net, gradE, ErrorFuncType::SUMOFSQUARES, input, target);
+*/	
+	for (const auto& nTest : RangeGen(1, 21)) {
+
+		vector<size_t> nNeuronsPerLayer;
+		vector<Real> input;
+		vector<Real> target;
+
+		// Set nNeuronPerLayer
+		nNeuronsPerLayer.resize(5 * nTest);
+
+		for (auto& nNeuron : nNeuronsPerLayer)
+			nNeuron = (rand() % 100) + 1;
+
+		// Set target
+		target.resize(nNeuronsPerLayer.back());
+
+		for (auto& t : target)
+			t = (rand() % 10) + 1;
+
+		// Set input 
+		input.resize(nTest);
+
+		for (auto& i : input)
+			i = (Real)(((rand() % 21) - 10) * 0.1);	// Random value in [-1, 1]
+
+		// Create the NN
+		NeuralNetworkFF nn(input.size(), nNeuronsPerLayer);
+
+		// FP step
+		auto nnResult = nn.ComputeNetwork(input);
+		auto activationsPerLayer = nnResult.activationsPerLayer;
+		vector<matrix<Real>> neuronsOutputPerLayer = nnResult.neuronsOutputPerLayer;
+
+		// BP step
+		vector<size_t> allNeuronsNumber;
+		vector<AFuncType> allAFunc;
+		vector<matrix<Real>> weightsPerLayer;
+
+		for (const auto& layer : RangeGen(0, nn.GetNumLayers())) {
+			allNeuronsNumber.push_back(nn.GetNumNeuronsPerLayer(layer));
+			allAFunc.push_back(nn.GetAFuncPerLayer(layer));
+			weightsPerLayer.push_back(nn.GetWeightsPerLayer(layer));
 		}
-		cout << endl;
+
+		DataFromNetwork dataNN{
+			nn.GetNumLayers(),
+			allNeuronsNumber,
+			activationsPerLayer,
+			weightsPerLayer,
+			allAFunc,
+			neuronsOutputPerLayer,
+			input
+		};
+
+		auto start_bp = high_resolution_clock::now();
+		auto gradE = BackPropagation::BProp(dataNN, ErrorFuncType::SUMOFSQUARES, target);
+		auto stop_bp = high_resolution_clock::now();
+
+		auto duration_bp = duration_cast<seconds>(stop_bp - start_bp);
+
+		//	Testing & compare
+		auto start_chk = high_resolution_clock::now();
+		bool test = Test_GradientChecking(nn, gradE, ErrorFuncType::SUMOFSQUARES, input, target);
+		auto stop_chk = high_resolution_clock::now();
+
+		auto duration_chk = duration_cast<seconds>(stop_chk - start_chk);
+
+		cout << "Test number: " << nTest << ". Result: ";
+
+		if (test)
+			cout << "OK! Time saved: " << duration_chk.count() - duration_bp.count() << "s" << endl;
+		else
+			cout << "Fail!" << endl;
+
 	}
 
-	// Compute gradient of E
-
-	vector<Real> allParams;
-	for (const auto& m : paramsPerLayer) {
-
-		for (size_t i = 0; i < m.size1(); i++) {
-			for (size_t j = 0; j < m.size2(); j++) {
-				allParams.push_back(m(i, j));
-			}
-		}
-	}
-
-	vector<Real> gradE;
-	vector<Real> input_with_bias;
-	input_with_bias.push_back(1); // First element is 1, because we have to consider also bias dimension
-
-	for (const auto& i : input)
-		input_with_bias.push_back(i);
-
-	//	From input layer to the Output layer
-	for (size_t layer = 0; layer < net.GetNumLayers(); layer++) {
-
-		for (size_t idxNeuron = 0; idxNeuron < paramsPerLayer[layer].size1(); idxNeuron++) {
-			for (size_t idxConnection = 0; idxConnection < paramsPerLayer[layer].size2(); idxConnection++) {
-				Real d_E_ij;
-
-				//	Compute dE/dw_ij
-				if (layer == 0)
-					d_E_ij = allDelta[layer][idxNeuron] * input_with_bias[idxConnection];
-				else
-					d_E_ij = allDelta[layer][idxNeuron] * neuronsOutputPerLayer[layer - 1](idxConnection, 0);
-
-				gradE.push_back(d_E_ij);
-			}
-		}
-	}
-
+/*
 	// Test Gradient Checking 
 
 	vector<Real> gradE_checking;
-	Real e = 0.01;
+	Real e = 0.0001;
+	vector<matrix<Real>> allParamsPerLayer;
+
+	for (size_t i = 0; i < net.GetNumLayers(); i++) {	// For each layer
+		allParamsPerLayer.push_back(net.GetAllParamPerLayer(i)); // Weights and biases
+	}
 
 	//	From input layer to the Output layer
 	for (size_t layer = 0; layer < net.GetNumLayers(); layer++) {
 
-		for (size_t idxNeuron = 0; idxNeuron < paramsPerLayer[layer].size1(); idxNeuron++) {
-			for (size_t idxConnection = 0; idxConnection < paramsPerLayer[layer].size2(); idxConnection++) {
+		for (size_t idxNeuron = 0; idxNeuron < allParamsPerLayer[layer].size1(); idxNeuron++) {
+			for (size_t idxConnection = 0; idxConnection < allParamsPerLayer[layer].size2(); idxConnection++) {
 
 				Real d_E_ij;
-				Real originalParam = paramsPerLayer[layer](idxNeuron, idxConnection);
-				Real param_plus_e = paramsPerLayer[layer](idxNeuron, idxConnection) + e;
-				Real param_minus_e = paramsPerLayer[layer](idxNeuron, idxConnection) - e;
+				Real originalParam = allParamsPerLayer[layer](idxNeuron, idxConnection);
+				Real param_plus_e = allParamsPerLayer[layer](idxNeuron, idxConnection) + e;
+				Real param_minus_e = allParamsPerLayer[layer](idxNeuron, idxConnection) - e;
 
 				vector<Real> output_plus;
 				vector<Real> output_minus;
 
 				// Compute output_plus
-				net.SetWeightPerNeuron(layer, idxNeuron, idxConnection, param_plus_e);
+				net.SetParamPerNeuron(layer, idxNeuron, idxConnection, param_plus_e);
 				auto temp_plus = net.ComputeNetwork(input).neuronsOutputPerLayer.back();
 
 				output_plus.resize(temp_plus.size1());
@@ -237,7 +281,7 @@ int main() {
 				auto error_plus = ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](output_plus, target);
 
 				// Compute output_minus
-				net.SetWeightPerNeuron(layer, idxNeuron, idxConnection, param_minus_e);
+				net.SetParamPerNeuron(layer, idxNeuron, idxConnection, param_minus_e);
 				auto temp_minus = net.ComputeNetwork(input).neuronsOutputPerLayer.back();
 
 				output_minus.resize(temp_minus.size1());
@@ -252,7 +296,7 @@ int main() {
 				gradE_checking.push_back(d_E_ij);
 
 				//	Restore default values
-				net.SetWeightPerNeuron(layer, idxNeuron, idxConnection, originalParam);
+				net.SetParamPerNeuron(layer, idxNeuron, idxConnection, originalParam);
 			}
 		}
 	}
@@ -290,4 +334,4 @@ int main() {
 /**/
 #pragma endregion
 
-}
+} 
