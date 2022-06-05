@@ -107,55 +107,113 @@ int main() {
 #pragma endregion
 
 #pragma region Test EFunc (Sum of squares)
-/*	
-	vector<Real> output { 5, 3, 2, 7, 2, 4 };
-	vector<Real> target1{ 5+0.3, 3+0.15, 2+1, 7-0.25, 2+0.55, 4+1.1 };
-	vector<Real> target2{ 5, 3 + 0.15, 2 + 1, 7, 2, 4 + 0.1 };
-	vector<Real> target3{ 5, 3, 2, 7, 2, 4 };
-	vector<Real> target4{ 5+1, 3+1, 2+1, 7+1, 2+1, 4+1 };
+/*	*
+
+	vector<Real> output{ 0.999, 0.0005, 0.0005 };
+	vector<Real> target1{ 1, 0.0, 0.0 };
+	vector<Real> target2{ 0.0, 1.0, 0.0 };
+	vector<Real> target3{ 0.0, 0.0, 1.0 };
+	vector<Real> target4{ 0.3, 0.3, 0.4 };
+	// Convert to matrix
+	matrix<Real> outputMat(output.size(), 1);
+	for (const auto& i : RangeGen(0, outputMat.size1()))
+		outputMat(i, 0) = output[i];
+
+	matrix<Real> target1Mat(target1.size(), 1);
+	matrix<Real> target2Mat(target2.size(), 1);
+	matrix<Real> target3Mat(target3.size(), 1);
+	matrix<Real> target4Mat(target4.size(), 1);
+
+	for (const auto& i : RangeGen(0, target1Mat.size1()))
+		target1Mat(i, 0) = target1[i];
+	for (const auto& i : RangeGen(0, target2Mat.size1()))
+		target2Mat(i, 0) = target2[i];
+	for (const auto& i : RangeGen(0, target3Mat.size1()))
+		target3Mat(i, 0) = target3[i];
+	for (const auto& i : RangeGen(0, target4Mat.size1()))
+		target4Mat(i, 0) = target4[i];
+
 
 	cout << "Output to validate: ";
 	for (const auto& o : output) cout << o << " ";
 	cout << endl;
 
+	cout << "SUM OF SQUARES: " << endl;
+
 	cout << "Error with target 1: ";
-	cout << ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](output, target1) << endl;
+	cout << ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](outputMat, target1Mat) << endl;
 
 	cout << "Error with target 2: ";
-	cout << ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](output, target2) << endl;
+	cout << ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](outputMat, target2Mat) << endl;
 
 	cout << "Error with target 3: ";
-	cout << ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](output, target3) << endl;
+	cout << ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](outputMat, target3Mat) << endl;
 
 	cout << "Error with target 4: ";
-	cout << ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](output, target4) << endl;
+	cout << ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](outputMat, target4Mat) << endl;
 
 	cout << endl;
-*/
+
+	cout << "CROSS ENTROPY: " << endl;
+
+	cout << "Error with target 1: ";
+	cout << ErrorFunction::EFunction[ErrorFuncType::CROSSENTROPY](outputMat, target1Mat) << endl;
+
+	cout << "Error with target 2: ";
+	cout << ErrorFunction::EFunction[ErrorFuncType::CROSSENTROPY](outputMat, target2Mat) << endl;
+
+	cout << "Error with target 3: ";
+	cout << ErrorFunction::EFunction[ErrorFuncType::CROSSENTROPY](outputMat, target3Mat) << endl;
+
+	cout << "Error with target 4: ";
+	cout << ErrorFunction::EFunction[ErrorFuncType::CROSSENTROPY](outputMat, target4Mat) << endl;
+
+	cout << endl;
+
+	cout << "CROSS ENTROPY + SOFT MAX: " << endl;
+
+	cout << "Error with target 1: ";
+	cout << ErrorFunction::EFunction[ErrorFuncType::CROSSENTROPY_SOFTMAX](outputMat, target1Mat) << endl;
+
+	cout << "Error with target 2: ";
+	cout << ErrorFunction::EFunction[ErrorFuncType::CROSSENTROPY_SOFTMAX](outputMat, target2Mat) << endl;
+
+	cout << "Error with target 3: ";
+	cout << ErrorFunction::EFunction[ErrorFuncType::CROSSENTROPY_SOFTMAX](outputMat, target3Mat) << endl;
+
+	cout << "Error with target 4: ";
+	cout << ErrorFunction::EFunction[ErrorFuncType::CROSSENTROPY_SOFTMAX](outputMat, target4Mat) << endl;
+
+	cout << endl;
+
+
+/**/
 #pragma endregion
 
 #pragma region Test Gradient computation
-
-	for (const auto& nTest : RangeGen(1, 2)) {
+/**/
+	for (const auto& nTest : RangeGen(1, 21)) {
 
 		vector<size_t> nNeuronsPerLayer;
 		vector<Real> input;
 		matrix<Real> target;
 
 		// Set nNeuronPerLayer
-		nNeuronsPerLayer.resize(5 * nTest);
+		nNeuronsPerLayer.resize(20 * nTest);
 
 		for (auto& nNeuron : nNeuronsPerLayer)
-			nNeuron = (rand() % 100) + 1;
+			nNeuron = (rand() % 10) + 1;
 
 		// Set target
 		target.resize(nNeuronsPerLayer.back(),1);
 
 		for (const auto& t : RangeGen (0, target.size1()))
-			target(t,0) = (rand() % 10) + 1;
+			target(t,0) = 0;
+
+		target(rand()% target.size1(), 0) = 1;
 
 		// Set input 
-		input.resize(nTest);
+		input.resize(100);
 
 		for (auto& i : input)
 			i = (Real)(((rand() % 21) - 10) * 0.1);	// Random value in [-1, 1]
@@ -163,7 +221,27 @@ int main() {
 		// Create the NN
 		NeuralNetworkFF nn(input.size(), nNeuronsPerLayer);
 
-//		nn.SetActivationFunction(nn.GetNumLayers() - 1, AFuncType::IDENTITY);
+		ErrorFuncType EFuncType;
+		size_t choice{ (size_t)(rand() % 3)};
+		switch (choice)
+		{
+		case 0:
+			EFuncType = ErrorFuncType::SUMOFSQUARES;
+			break;
+		case 1:
+			EFuncType = ErrorFuncType::CROSSENTROPY;
+
+			break;
+		case 2:
+			EFuncType = ErrorFuncType::CROSSENTROPY_SOFTMAX;
+			nn.SetActivationFunction(nn.GetNumLayers() - 1, AFuncType::IDENTITY);
+
+			break;
+
+		default:
+			EFuncType = ErrorFuncType::CROSSENTROPY;
+			break;
+		}
 
 		// FP step
 		auto nnResult = nn.ComputeNetwork(input);
@@ -181,7 +259,7 @@ int main() {
 			weightsPerLayer.push_back(nn.GetWeightsPerLayer(layer));
 		}
 
-		DataFromNetwork dataNN{
+		DataFromNetwork dataNN	{
 			nn.GetNumLayers(),
 			allNeuronsNumber,
 			activationsPerLayer,
@@ -192,14 +270,14 @@ int main() {
 		};
 
 		auto start_bp = high_resolution_clock::now();
-		auto gradE = BackPropagation::BProp(dataNN, ErrorFuncType::SUMOFSQUARES, target);
+		auto gradE = BackPropagation::BProp(dataNN, EFuncType, target);
 		auto stop_bp = high_resolution_clock::now();
 
 		auto duration_bp = duration_cast<seconds>(stop_bp - start_bp);
 
 		//	Testing & compare
 		auto start_chk = high_resolution_clock::now();
-		bool test = Test_GradientChecking(nn, gradE, ErrorFuncType::SUMOFSQUARES, input, target);
+		bool test = Test_GradientChecking(nn, gradE, EFuncType, input, target);
 		auto stop_chk = high_resolution_clock::now();
 
 		auto duration_chk = duration_cast<seconds>(stop_chk - start_chk);
@@ -207,12 +285,14 @@ int main() {
 		cout << "Test number: " << nTest << ". Result: ";
 
 		if (test)
-			cout << "OK! Time saved: " << duration_chk.count() - duration_bp.count() << "s" << endl;
+			cout << "OK! Time saved: " << duration_chk.count() - duration_bp.count() << "s. ";
 		else
-			cout << "Fail!" << endl;
+			cout << "Fail! ";
+
+		cout << "Loss function: " << NameOfErrorFuncType(EFuncType) << endl;
 
 	}
-
+/**/
 #pragma endregion
 
 } 

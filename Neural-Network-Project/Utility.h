@@ -15,7 +15,7 @@ using std::vector;
 /**
 	Real has the double precision. 
  */
-typedef double Real;
+typedef long double Real;
 
 /**
  *	Range generator.
@@ -48,6 +48,7 @@ inline Real SoftMax(const matrix<Real>& outputs, const size_t idxOutput) {
 	Real summation{ 0 };
 	for (const auto& h : RangeGen(0, outputs.size1())) 
 		summation += exp(outputs(h, 0));
+	Real SM = exp(outputs(idxOutput, 0)) / summation;
 
-	return (exp(outputs(idxOutput, 0) / summation));
+ 	return SM;
 }

@@ -82,12 +82,12 @@ Real ErrorFunction::_crossEntropy(const matrix<Real>& NNOutput, const matrix<Rea
 	Real summation{ 0 };
 	for (const auto& k : RangeGen(0, NNOutput.size1())) {
 		//	Check if the log domain is respected. TODO: use exception
-		if (NNOutput(k,0) >= 1) {
+		if (NNOutput(k,0) <= 0) {
 			std::cout << "[ERROR] output is not compatible with Cross Entropy." << std::endl;
 			return -1;
 		}
 
-		summation += targets(k,0) * log(1 - NNOutput(k,0));
+		summation += targets(k,0) * log(NNOutput(k,0));
 	}
 	Real loss{ -summation };
 
@@ -113,9 +113,12 @@ Real ErrorFunction::_crossEntropy_softMax(const matrix<Real>& NNOutput, const ma
 }
 
 Real ErrorFunction::_crossEntropyDer(const Real neuronOutput, const Real target) {
-	return (target / (neuronOutput - target));
+	return (-target / neuronOutput);
 }
 
 Real ErrorFunction::_crossEntropyDer_softMax(const Real softMax_output, const Real target) {
+	if (target != 0 && target != 1)
+		std::cout << "[ERROR] The target is not in one-hot encoding." << std::endl;
+
 	return (softMax_output - target);
 }

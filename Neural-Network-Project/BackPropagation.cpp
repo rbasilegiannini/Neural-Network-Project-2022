@@ -48,7 +48,7 @@ vector<Real> BackPropagation::BProp(const DataFromNetwork& dataNN, const ErrorFu
 
 		else {
 			std::cout << "[ERROR] It's not possibile to run the Post Processing step. " << std::endl;
-			std::cout << "Default loss function: CROSS ENTROPY. " << std::endl;
+			std::cout << "New loss function: CROSS ENTROPY. " << std::endl;
 
 			EFuncType = ErrorFuncType::CROSSENTROPY;
 		}
@@ -58,7 +58,7 @@ vector<Real> BackPropagation::BProp(const DataFromNetwork& dataNN, const ErrorFu
 	if (EType == ErrorFuncType::CROSSENTROPY) {
 		if (dataNN.AFunctionDerivativePerLayer.back() != AFuncType::SIGMOID) {
 			std::cout << "[ERROR] It's not possibile to use CROSS ENTROPY loss. " << std::endl;
-			std::cout << "Default loss function: SUM OF SQUARES. " << std::endl;
+			std::cout << "New loss function: SUM OF SQUARES. " << std::endl;
 
 			EFuncType = ErrorFuncType::SUMOFSQUARES;
 		}

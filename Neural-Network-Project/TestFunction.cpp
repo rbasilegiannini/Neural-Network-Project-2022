@@ -38,7 +38,7 @@ bool Test_GradientChecking(const NeuralNetworkFF& NN, const vector<Real>& gradTo
 				for (size_t i = 0; i < temp_plus.size1(); i++)
 					output_plus(i,0) = temp_plus(i, 0);
 
-				auto error_plus = ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](output_plus, target);
+				auto error_plus = ErrorFunction::EFunction[EFuncType](output_plus, target);
 
 				// Compute output_minus
 				net.SetParamPerNeuron(layer, neuron, conn, param_minus_e);
@@ -48,7 +48,7 @@ bool Test_GradientChecking(const NeuralNetworkFF& NN, const vector<Real>& gradTo
 				for (size_t i = 0; i < temp_minus.size1(); i++)
 					output_minus(i, 0) = temp_minus(i, 0);
 
-				auto error_minus = ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](output_minus, target);
+				auto error_minus = ErrorFunction::EFunction[EFuncType](output_minus, target);
 
 				//	Compute dE/dw_ij
 				d_E_ij = (error_plus - error_minus) / (2 * e);
@@ -79,13 +79,15 @@ bool Test_GradientChecking(const NeuralNetworkFF& NN, const vector<Real>& gradTo
 		gradE_diff_quads += (gradToTest[i] - gradE_checking[i]) * (gradToTest[i] - gradE_checking[i]);
 	Real difference_num = sqrt(gradE_diff_quads);
 
-	auto difference_denum = gradE_mag + gradE_checking_mag;
-	auto difference = (difference_num / difference_denum);
+	Real difference_denum = gradE_mag + gradE_checking_mag;
+	Real difference = (difference_num / difference_denum);
 
 	if (difference < 1.0e-7)
 		successful = true;
-	else
+	else 
 		successful = false;
+
+	std::cout << "Gradient diff: " << difference << ". ";
 
 	return successful;
 }
