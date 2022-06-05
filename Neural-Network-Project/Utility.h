@@ -1,7 +1,9 @@
 #pragma once
 
 #include <vector>
+#include <boost/numeric/ublas/matrix.hpp>
 
+using boost::numeric::ublas::matrix;
 using std::vector;
 
 /**
@@ -22,7 +24,7 @@ typedef double Real;
  * \param	last is the last element of the range (not included).
  * \return	a vector with the range.
  */
-inline vector<int> RangeGen(int first, int last) {
+inline vector<int> RangeGen(const int first, const int last) {
 	int size = abs(last - first);
 	vector<int> range(size);
 	int idx{ first };
@@ -31,9 +33,21 @@ inline vector<int> RangeGen(int first, int last) {
 		for (auto& value : range)
 			value = idx++;
 	}
-	else {
+	else if (last < first) {
 		for (auto& value : range)
 			value = idx--;
 	}
+	else
+		range.push_back(idx);
+
 	return range;
+}
+
+inline Real SoftMax(const matrix<Real>& outputs, const size_t idxOutput) {
+
+	Real summation{ 0 };
+	for (const auto& h : RangeGen(0, outputs.size1())) 
+		summation += exp(outputs(h, 0));
+
+	return (exp(outputs(idxOutput, 0) / summation));
 }

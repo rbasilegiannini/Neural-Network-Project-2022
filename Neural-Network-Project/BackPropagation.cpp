@@ -3,8 +3,7 @@
 
 using std::deque;
 
-vector<Real> BackPropagation::BProp(const DataFromNetwork& dataNN, const ErrorFuncType EFuncType, const vector<Real>& targets) {
-
+vector<Real> BackPropagation::BProp(const DataFromNetwork& dataNN, const ErrorFuncType EType, const matrix<Real>& targets) {
 	auto nLayers = dataNN.numLayers;
 	auto AFuncLayer = dataNN.AFunctionDerivativePerLayer;
 	auto AValLayer = dataNN.activationsPerLayer;
@@ -13,34 +12,77 @@ vector<Real> BackPropagation::BProp(const DataFromNetwork& dataNN, const ErrorFu
 	auto outputsLayer = dataNN.neuronsOutputPerLayer;
 	auto nNeuronsLayer = dataNN.numNeuronsPerLayer;
 
+#pragma region Tools
+
+	auto PostProcessing = [&]() {
+		matrix<Real> outputs(nNeuronsLayer.back(), 1);
+
+		for (const auto& k : RangeGen(0, nNeuronsLayer.back())) {
+			outputs(k, 0) = SoftMax(outputsLayer.back(), k);
+		}
+
+		*(outputsLayer.end() - 1) = outputs;
+	};
+
+	AFuncType AFuncType = AFuncLayer.back();
+	auto ComputeDeltaOutput = [&](const size_t neuron) -> Real {
+
+		auto a_k = AValLayer.back()(neuron, 0);
+		auto y_k = outputsLayer.back()(neuron, 0);
+		auto t_k = targets(neuron,0);
+		auto AFuncDer_k = ActivationFunction::AFunctionDerivative[AFuncType];
+		auto EFuncDer_k = ErrorFunction::EFunctionDer_RespectOutput[EType];
+
+		return (AFuncDer_k(a_k) * EFuncDer_k(y_k, t_k));
+	};
+
+#pragma endregion
+
+#pragma region Checks
+
+	//	Check on loss function
+	ErrorFuncType EFuncType{ EType };
+	if (EType == ErrorFuncType::CROSSENTROPY_SOFTMAX) {
+		if (dataNN.AFunctionDerivativePerLayer.back() == AFuncType::IDENTITY) 
+			PostProcessing();
+
+		else {
+			std::cout << "[ERROR] It's not possibile to run the Post Processing step. " << std::endl;
+			std::cout << "Default loss function: CROSS ENTROPY. " << std::endl;
+
+			EFuncType = ErrorFuncType::CROSSENTROPY;
+		}
+
+	}
+
+	if (EType == ErrorFuncType::CROSSENTROPY) {
+		if (dataNN.AFunctionDerivativePerLayer.back() != AFuncType::SIGMOID) {
+			std::cout << "[ERROR] It's not possibile to use CROSS ENTROPY loss. " << std::endl;
+			std::cout << "Default loss function: SUM OF SQUARES. " << std::endl;
+
+			EFuncType = ErrorFuncType::SUMOFSQUARES;
+		}
+	}
+
+#pragma endregion
+
 #pragma region Compute delta	
 
 	deque<vector<Real>> allDelta(nLayers);
 
-	//	Output delta
 	vector<Real> deltaOutput;
-
-	AFuncType AFuncType = AFuncLayer.back();
-	for (const auto& k : RangeGen(0, nNeuronsLayer.back())) {
-
-		auto a_k = AValLayer.back()(k, 0);
-		auto y_k = outputsLayer.back()(k, 0);
-		auto t_k = targets[k];
-		auto AFuncDer_k = ActivationFunction::AFunctionDerivative[AFuncType];
-		auto EFuncDer_k = ErrorFunction::EFunctionDer_RespectOutput[EFuncType];
-
-		deltaOutput.push_back(AFuncDer_k(a_k) * EFuncDer_k(y_k, t_k));
-	}
-
-	*(allDelta.end() - 1) = deltaOutput;
+	for (const auto& k : RangeGen(0, nNeuronsLayer.back()))
+		deltaOutput.push_back(ComputeDeltaOutput(k));
+	allDelta.back() = deltaOutput;
 
 	//	Internal delta
 
 	//	From the LAST-1 layer to the first layer.
-	for (const auto& layer : RangeGen((nLayers - 1) - 1, -1)) {
+	auto lastHiddenL = (nLayers - 1) - 1;
+	for (const auto& layer : RangeGen(lastHiddenL, -1)) {
 
 		vector<Real> delta_i;
-		*allDelta.begin() = delta_i;	// delta_i is empty. 
+		allDelta.front() = delta_i; // delta_i is empty. 
 
 		AFuncType = AFuncLayer[layer];
 

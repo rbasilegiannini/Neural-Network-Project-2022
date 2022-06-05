@@ -135,46 +135,12 @@ int main() {
 #pragma endregion
 
 #pragma region Test Gradient computation
-/**
-	// FP step
-	auto netResult = net.ComputeNetwork(input);
-	auto activationsPerLayer = netResult.activationsPerLayer;
-	vector<matrix<Real>> neuronsOutputPerLayer = netResult.neuronsOutputPerLayer;
-	
-	// BP step
-	vector<size_t> allNeuronsNumber;
-	vector<AFuncType> allAFunc;
-	vector<matrix<Real>> weightsPerLayer;
 
-	for (size_t i = 0; i < net.GetNumLayers(); i++) {	// For each layer
-		allNeuronsNumber.push_back(net.GetNumNeuronsPerLayer(i));
-		allAFunc.push_back(net.GetAFuncPerLayer(i));
-		weightsPerLayer.push_back(net.GetWeightsPerLayer(i));
-	}
-
-	DataFromNetwork dataNN{
-		net.GetNumLayers(),
-		allNeuronsNumber,
-		activationsPerLayer,
-		weightsPerLayer,
-		allAFunc,
-		neuronsOutputPerLayer,
-		input
-	};
-	
-	vector<Real> target(_numNeuronsPerLayer.back());
-	for (size_t v{ 0 }; v < target.size(); v++)
-		target[v] = 1;
-
-	auto gradE = BackPropagation::BProp(dataNN, ErrorFuncType::SUMOFSQUARES, target);
-
-	bool test = Test_GradientChecking(net, gradE, ErrorFuncType::SUMOFSQUARES, input, target);
-*/	
-	for (const auto& nTest : RangeGen(1, 21)) {
+	for (const auto& nTest : RangeGen(1, 2)) {
 
 		vector<size_t> nNeuronsPerLayer;
 		vector<Real> input;
-		vector<Real> target;
+		matrix<Real> target;
 
 		// Set nNeuronPerLayer
 		nNeuronsPerLayer.resize(5 * nTest);
@@ -183,10 +149,10 @@ int main() {
 			nNeuron = (rand() % 100) + 1;
 
 		// Set target
-		target.resize(nNeuronsPerLayer.back());
+		target.resize(nNeuronsPerLayer.back(),1);
 
-		for (auto& t : target)
-			t = (rand() % 10) + 1;
+		for (const auto& t : RangeGen (0, target.size1()))
+			target(t,0) = (rand() % 10) + 1;
 
 		// Set input 
 		input.resize(nTest);
@@ -196,6 +162,8 @@ int main() {
 
 		// Create the NN
 		NeuralNetworkFF nn(input.size(), nNeuronsPerLayer);
+
+//		nn.SetActivationFunction(nn.GetNumLayers() - 1, AFuncType::IDENTITY);
 
 		// FP step
 		auto nnResult = nn.ComputeNetwork(input);
@@ -245,93 +213,6 @@ int main() {
 
 	}
 
-/*
-	// Test Gradient Checking 
-
-	vector<Real> gradE_checking;
-	Real e = 0.0001;
-	vector<matrix<Real>> allParamsPerLayer;
-
-	for (size_t i = 0; i < net.GetNumLayers(); i++) {	// For each layer
-		allParamsPerLayer.push_back(net.GetAllParamPerLayer(i)); // Weights and biases
-	}
-
-	//	From input layer to the Output layer
-	for (size_t layer = 0; layer < net.GetNumLayers(); layer++) {
-
-		for (size_t idxNeuron = 0; idxNeuron < allParamsPerLayer[layer].size1(); idxNeuron++) {
-			for (size_t idxConnection = 0; idxConnection < allParamsPerLayer[layer].size2(); idxConnection++) {
-
-				Real d_E_ij;
-				Real originalParam = allParamsPerLayer[layer](idxNeuron, idxConnection);
-				Real param_plus_e = allParamsPerLayer[layer](idxNeuron, idxConnection) + e;
-				Real param_minus_e = allParamsPerLayer[layer](idxNeuron, idxConnection) - e;
-
-				vector<Real> output_plus;
-				vector<Real> output_minus;
-
-				// Compute output_plus
-				net.SetParamPerNeuron(layer, idxNeuron, idxConnection, param_plus_e);
-				auto temp_plus = net.ComputeNetwork(input).neuronsOutputPerLayer.back();
-
-				output_plus.resize(temp_plus.size1());
-				for (size_t i = 0; i < temp_plus.size1(); i++)
-					output_plus[i] = temp_plus(i, 0);
-
-				auto error_plus = ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](output_plus, target);
-
-				// Compute output_minus
-				net.SetParamPerNeuron(layer, idxNeuron, idxConnection, param_minus_e);
-				auto temp_minus = net.ComputeNetwork(input).neuronsOutputPerLayer.back();
-
-				output_minus.resize(temp_minus.size1());
-				for (size_t i = 0; i < temp_minus.size1(); i++)
-					output_minus[i] = temp_minus(i, 0);
-
-				auto error_minus = ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](output_minus, target);
-
-				//	Compute dE/dw_ij
-				d_E_ij = (error_plus - error_minus) / (2 * e);
-
-				gradE_checking.push_back(d_E_ij);
-
-				//	Restore default values
-				net.SetParamPerNeuron(layer, idxNeuron, idxConnection, originalParam);
-			}
-		}
-	}
-
-	cout << "GradE: " << endl;
-	for (const auto& d : gradE)
-		cout << d << " ";
-	cout << endl << endl;
-
-	cout << "GradE (checking): " << endl;
-	for (const auto& d : gradE_checking)
-		cout << d << " ";
-	cout << endl;
-
-	Real gradE_quads{0};
-	for (auto d : gradE)
-		gradE_quads += d * d;
-	Real gradE_mag = sqrt(gradE_quads);
-
-	Real gradE_check_quads{ 0 };
-	for (auto d : gradE_checking)
-		gradE_check_quads += d * d;
-	Real gradE_checking_mag = sqrt(gradE_check_quads);
-
-	Real gradE_diff_quads{ 0 };
-	for (int i = 0; i < gradE.size(); i++)
-		gradE_diff_quads += (gradE[i] - gradE_checking[i]) * (gradE[i] - gradE_checking[i]);
-	Real difference_num = sqrt(gradE_diff_quads);
-
-	auto difference_denum = gradE_mag + gradE_checking_mag;
-
-	cout << "The difference: " << (difference_num / difference_denum) << endl;
-
-	cout << endl;
-/**/
 #pragma endregion
 
 } 

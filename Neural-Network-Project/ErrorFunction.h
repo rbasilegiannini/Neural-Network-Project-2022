@@ -14,7 +14,7 @@ using std::string;
 /**
  * @brief All error functions provided are reachable by these enums.
  */
-enum class ErrorFuncType { SUMOFSQUARES };
+enum class ErrorFuncType { SUMOFSQUARES, CROSSENTROPY, CROSSENTROPY_SOFTMAX};
 
 /**
  * This function returns the name of the error function.
@@ -33,12 +33,17 @@ class ErrorFunction {
 public:
 	ErrorFunction() = delete;
 
-	static map <ErrorFuncType, function<Real(const vector<Real>& , const vector<Real>&)>> EFunction;
+	static map <ErrorFuncType, function<Real(const matrix<Real>& , const matrix<Real>&)>> EFunction;
 	static map <ErrorFuncType, function<Real(const Real, const Real)>> EFunctionDer_RespectOutput;
 
 private:
-	static Real _sumOfSquares(const vector<Real>& NNOutput, const vector<Real>& targets);
-	static Real _sumOfSquaresDer_RespectOutput(const Real neuronOutput, const Real target);
+	static Real _sumOfSquares(const matrix<Real>& NNOutput, const matrix<Real>& targets);
+	static Real _sumOfSquaresDer(const Real neuronOutput, const Real target);
+
+	static Real _crossEntropy(const matrix<Real>& NNOutput, const matrix<Real>& targets);
+	static Real _crossEntropy_softMax(const matrix<Real>& NNOutput, const matrix<Real>& targets);
+	static Real _crossEntropyDer(const Real neuronOutput, const Real target);
+	static Real _crossEntropyDer_softMax(const Real neuronOutput, const Real target);
 
 };
 

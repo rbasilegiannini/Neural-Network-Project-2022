@@ -36,7 +36,7 @@ public:
 	 * \param	EFuncType is the type of the error function.
 	 * \return	A vector of delta values.
 	 */
-	static vector<Real> BProp(const DataFromNetwork& dataNN, const ErrorFuncType EFuncType, const vector<Real>& targets);
+	static vector<Real> BProp(const DataFromNetwork& dataNN, const ErrorFuncType EFuncType, const matrix<Real>& targets);
 
 };
 

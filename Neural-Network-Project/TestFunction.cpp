@@ -1,7 +1,7 @@
 #include "TestFunction.h"
 
 bool Test_GradientChecking(const NeuralNetworkFF& NN, const vector<Real>& gradToTest, 
-	const ErrorFuncType EFuncType, const vector<Real>& input, const vector<Real>& target) {
+	const ErrorFuncType EFuncType, const vector<Real>& input, const matrix<Real>& target) {
 
 	bool successful{ false };
 
@@ -27,16 +27,16 @@ bool Test_GradientChecking(const NeuralNetworkFF& NN, const vector<Real>& gradTo
 				Real param_plus_e = allParamsPerLayer[layer](neuron, conn) + e;
 				Real param_minus_e = allParamsPerLayer[layer](neuron, conn) - e;
 
-				vector<Real> output_plus;
-				vector<Real> output_minus;
+				matrix<Real> output_plus;
+				matrix<Real> output_minus;
 
 				// Compute output_plus
 				net.SetParamPerNeuron(layer, neuron, conn, param_plus_e);
 				auto temp_plus = net.ComputeNetwork(input).neuronsOutputPerLayer.back();
 
-				output_plus.resize(temp_plus.size1());
+				output_plus.resize(temp_plus.size1(),1);
 				for (size_t i = 0; i < temp_plus.size1(); i++)
-					output_plus[i] = temp_plus(i, 0);
+					output_plus(i,0) = temp_plus(i, 0);
 
 				auto error_plus = ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](output_plus, target);
 
@@ -44,9 +44,9 @@ bool Test_GradientChecking(const NeuralNetworkFF& NN, const vector<Real>& gradTo
 				net.SetParamPerNeuron(layer, neuron, conn, param_minus_e);
 				auto temp_minus = net.ComputeNetwork(input).neuronsOutputPerLayer.back();
 
-				output_minus.resize(temp_minus.size1());
+				output_minus.resize(temp_minus.size1(),1);
 				for (size_t i = 0; i < temp_minus.size1(); i++)
-					output_minus[i] = temp_minus(i, 0);
+					output_minus(i, 0) = temp_minus(i, 0);
 
 				auto error_minus = ErrorFunction::EFunction[ErrorFuncType::SUMOFSQUARES](output_minus, target);
 
