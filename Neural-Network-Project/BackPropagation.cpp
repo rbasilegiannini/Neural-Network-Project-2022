@@ -3,7 +3,9 @@
 
 using std::deque;
 
-vector<Real> BackPropagation(const DataFromNetwork& dataNN, const ErrorFuncType EType, const matrix<Real>& targets) {
+vector<Real> BackPropagation(const DataFromNetwork& dataNN, const ErrorFuncType EType, const matrix<Real>& target) 
+throw (InvalidParametersException) {
+
 	auto nLayers = dataNN.numLayers;
 	auto AFuncLayer = dataNN.AFunctionDerivativePerLayer;
 	auto AValLayer = dataNN.activationsPerLayer;
@@ -29,7 +31,7 @@ vector<Real> BackPropagation(const DataFromNetwork& dataNN, const ErrorFuncType 
 
 		auto a_k = AValLayer.back()(neuron, 0);
 		auto y_k = outputsLayer.back()(neuron, 0);
-		auto t_k = targets(neuron,0);
+		auto t_k = target(neuron,0);
 		auto AFuncDer_k = ActivationFunction::AFunctionDerivative[AFuncType];
 		auto EFuncDer_k = ErrorFunction::EFunctionDer_RespectOutput[EType];
 
@@ -39,6 +41,8 @@ vector<Real> BackPropagation(const DataFromNetwork& dataNN, const ErrorFuncType 
 #pragma endregion
 
 #pragma region Checks
+	if (target.size1() != nNeuronsLayer.back())
+		throw InvalidParametersException("[BACKPROP] the target is not compatbile with network's output.");
 
 	//	Check on loss function
 	ErrorFuncType EFuncType{ EType };

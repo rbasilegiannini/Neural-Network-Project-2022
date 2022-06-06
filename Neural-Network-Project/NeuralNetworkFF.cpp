@@ -19,32 +19,22 @@ NeuralNetworkFF :: NeuralNetworkFF(
 	_inputDimension{ inputDimension },
 	_activationFunction_PerLayer{ AFuncPerLayer }
 {
+	
 	// Resize vectors (each vector's element concerns a specific layer) 
 	_weights_PerLayer.resize(_numLayers);
 	_bias_PerLayer.resize(_numLayers);
 	_activationFunction_PerLayer.resize(_numLayers);
 
-	size_t layer{ 0 };
-	for (auto& weightMatrix : _weights_PerLayer) {
-		srand(time(0));
-
+	for (const auto& layer : RangeGen(0, _numLayers)) {
 		// Resize matrix and bias
 		if (layer == 0)
-			weightMatrix.resize(_numNeurons_PerLayer[layer], _inputDimension);
+			_weights_PerLayer[layer].resize(_numNeurons_PerLayer[layer], _inputDimension);
 		else
-			weightMatrix.resize(_numNeurons_PerLayer[layer], _numNeurons_PerLayer[layer - 1]);
+			_weights_PerLayer[layer].resize(_numNeurons_PerLayer[layer], _numNeurons_PerLayer[layer - 1]);
 
 		_bias_PerLayer[layer].resize(_numNeurons_PerLayer[layer], 1); // It's a column vector
 
-		// Random initialization of weights
-		for (auto& w : weightMatrix.data()) 
-			w = (Real)(((rand() % 21) - 10) * 0.1);	// Random value in [-1, 1]
-
-		// Random initialization of bias 
-		for (auto& b : _bias_PerLayer[layer].data())
-			b = (Real)(((rand() % 21) - 10) * 0.1);	// Random value in [-1, 1]
-
-		layer++;
+		_randomInit(layer, -1, 1);
 	}
 }
 
@@ -161,7 +151,7 @@ void NeuralNetworkFF::SetAllWeights(const size_t layer, const matrix<Real>& newW
 	}
 }
 
-void NeuralNetworkFF::SetAllBiases(const size_t layer, vector<Real>& newBias) throw (InvalidParametersException) {
+void NeuralNetworkFF::SetAllBiases(const size_t layer, const vector<Real>& newBias) throw (InvalidParametersException) {
 	if (layer >= _numLayers)
 		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
 
@@ -195,6 +185,22 @@ throw (InvalidParametersException) {
 		else
 			throw InvalidParametersException("[NNFF] param doesn't exist.");
 
+}
+
+void NeuralNetworkFF::SetAllParams_PerLayer(const size_t layer, const matrix<Real>& newMat) throw(InvalidParametersException) {
+	if (layer >= _numLayers)
+		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
+	if (_numNeurons_PerLayer[layer] != newMat.size1())
+		throw InvalidParametersException("[NNFF] the new MatParam is not compatible with the layer (number of neurons).");
+	if (_weights_PerLayer[layer].size2() + 1 != newMat.size2())
+		throw InvalidParametersException("[NNFF] the new MatParam is not compatible with the layer (number of connections).");
+
+	for (const auto& neuron : RangeGen(0, _numNeurons_PerLayer[layer])) {
+		_bias_PerLayer[layer](neuron, 0) = newMat(neuron, 0);
+
+		for (const auto& conn : RangeGen(0, _weights_PerLayer[layer].size2()))
+			_weights_PerLayer[layer](neuron, conn) = newMat(neuron, conn + 1);
+	}
 }
 
 NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) throw (InvalidParametersException) {
@@ -250,6 +256,17 @@ NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) throw (
 	return netResult;
 }
 
+void NeuralNetworkFF::RandomInitialization(const int l_ext, const int r_ext) {
+
+	try {
+		for (const auto& layer : RangeGen(0, _numLayers))
+			_randomInit(layer, l_ext, r_ext);
+	}
+	catch (InvalidParametersException e) {
+		cout << e.getErrorMessage() << endl;
+	}
+}
+
 void NeuralNetworkFF::PrintNetwork() {
 
 	// Print all index layer, weights and bias
@@ -287,4 +304,22 @@ void NeuralNetworkFF::PrintNetwork() {
 
 		idxLayer++;
 	}
+}
+
+void NeuralNetworkFF::_randomInit(const size_t layer, const int l_ext, const int r_ext) throw (InvalidParametersException) {
+	if (layer >= _numLayers)
+		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
+
+	if (l_ext >= r_ext)
+		throw InvalidParametersException("[NNFF] l_ext must be less than r_ext.");
+
+	srand(time(0));
+	//	Init biases
+	for (auto& b : _bias_PerLayer[layer].data())
+		b = (Real)(((rand() % ((r_ext - l_ext) * 1000)) + ((l_ext * 1000) + 1)) * 0.001);	// Random value in [l_ext, l_ext]
+
+	//	Init weights
+	for (auto& w : _weights_PerLayer[layer].data())
+		w = (Real)(((rand() % ((r_ext - l_ext) * 1000)) + ((l_ext * 1000) + 1)) * 0.001);	// Random value in [l_ext, l_ext]
+
 }

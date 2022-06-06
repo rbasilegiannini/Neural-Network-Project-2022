@@ -6,12 +6,15 @@ NeuralNetworkManager& NeuralNetworkManager::GetNNManager(const Hyperparameters& 
 	return nnManager;
 }
 
-void NeuralNetworkManager::Run(const vector<Real>& input) throw (InvalidParametersException) {
-	if (input.size() != _neuralNetwork.GetInputDimension())
-		throw InvalidParametersException("[MANAGER] input's dimension must be compatible with the network.");
+void NeuralNetworkManager::Run(const vector<Real>& input) {
 
-	_input = input;
-	_netResult = _neuralNetwork.ComputeNetwork(_input);
+	try {
+		_input = input;
+		_netResult = _neuralNetwork.ComputeNetwork(_input);
+	}
+	catch (InvalidParametersException e) {
+		std::cout << e.getErrorMessage() << std::endl;
+	}
 }
 
 vector<Real> NeuralNetworkManager::ComputeGradE_PerSample(const ErrorFuncType EFuncType, const vector<Real>& targets) {
@@ -44,16 +47,50 @@ vector<Real> NeuralNetworkManager::ComputeGradE_PerSample(const ErrorFuncType EF
 	for (const auto& k : RangeGen(0, targets.size()))
 		matTarget(k, 0) = targets[k];
 	
-	gradE = BackPropagation(dataNN, EFuncType, matTarget);
-
+	try {
+		gradE = BackPropagation(dataNN, EFuncType, matTarget);
+	}
+	catch (InvalidParametersException e) {
+		std::cout << e.getErrorMessage() << std::endl;
+	}
+		
 	return gradE;
 }
 
-void NeuralNetworkManager::SetAFunc_PerLayer(const size_t layer, const AFuncType AFunctionType) throw (InvalidParametersException) {
-	if (layer >= _neuralNetwork.GetNumLayers())
-		throw InvalidParametersException("[MANAGER] layer must be in [0, ..., NetworkLayer-1].");
+void NeuralNetworkManager::SetAllParam_PerLayer(const size_t layer, const matrix<Real>& newMat) {
+	try {
+		_neuralNetwork.SetAllParams_PerLayer(layer, newMat);
+	}
+	catch (InvalidParametersException e) {
+		std::cout << e.getErrorMessage() << std::endl;
+	}
+}
 
-	_neuralNetwork.SetAFunc_PerLayer(layer, AFunctionType);
+void NeuralNetworkManager::SetAFunc_PerLayer(const size_t layer, const AFuncType AFunctionType) {
+
+	try {
+		_neuralNetwork.SetAFunc_PerLayer(layer, AFunctionType);
+	}
+	catch (InvalidParametersException e) {
+		std::cout << e.getErrorMessage() << std::endl;
+	}
+}
+
+void NeuralNetworkManager::ResetHyperparameters(const Hyperparameters& hyp) {
+	_neuralNetwork = NeuralNetworkFF(hyp.inputDimension, hyp.numNeuronsPerLayer, hyp.AFuncPerLayer);
+}
+
+matrix<Real> NeuralNetworkManager::GetAllParam_PerLayer(const size_t layer) {
+	try {
+		return _neuralNetwork.GetAllParam_PerLayer(layer);
+	}
+	catch (InvalidParametersException e) {
+		std::cout << e.getErrorMessage() << std::endl;
+	}
+}
+
+void NeuralNetworkManager::RandomInitialization(const int l_ext, const int r_ext) {
+	_neuralNetwork.RandomInitialization(l_ext, r_ext);
 }
 
 NeuralNetworkManager::NeuralNetworkManager(const Hyperparameters& hyp) 

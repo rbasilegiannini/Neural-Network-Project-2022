@@ -38,7 +38,7 @@ int main() {
 
 	Real add{ 0 };
 
-	///
+	// W1
 	weights[0](0, 0) = -0.6 + add;
 	weights[0](0, 1) = 0.7 + add;
 
@@ -57,17 +57,33 @@ int main() {
 	weights[2](0, 0) = 0.6 + add;
 
 	for (size_t i{ 0 }; i < _numNeuronsPerLayer.size(); i++) {
-		net.SetAllWeights(i, weights[i]);
+//		net.SetAllWeights(i, weights[i]);
 
 		vector<Real> vecZero(_numNeuronsPerLayer[i], 0);
-		net.SetAllBiases(i, vecZero);	// Bias to zero
+//		net.SetAllBiases(i, vecZero);	// Bias to zero
 	}
+	cout << "Old mat: " << endl;
+	net.PrintNetwork();
 
-//	net.PrintNetwork();
+	matrix<Real> matParam1(3,3);
+	for (const auto& neuron : RangeGen(0, matParam1.size1())) {
+		matParam1(neuron, 0) = 0;
+		
+		for (const auto& conn : RangeGen(0, weights[0].size2()))
+			matParam1(neuron, conn + 1) = weights[0](neuron, conn);
+	}
+	
+	net.SetAllParams_PerLayer(0, matParam1);
 
-	auto params0 = net._GetAllParam_PerLayer(0);
-	auto params1 = net._GetAllParam_PerLayer(1);
-	auto params2 = net._GetAllParam_PerLayer(2);
+	cout << "'New mat: " << endl;
+
+	net.PrintNetwork();
+
+	cout << "Again: " << endl;
+
+	auto params0 = net.GetAllParam_PerLayer(0);
+	auto params1 = net.GetAllParam_PerLayer(1);
+	auto params2 = net.GetAllParam_PerLayer(2);
 
 	for (size_t i = 0; i < params0.size1(); i++) {
 		for (size_t j = 0; j < params0.size2(); j++)
