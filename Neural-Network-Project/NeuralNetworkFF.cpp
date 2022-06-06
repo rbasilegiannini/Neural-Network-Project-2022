@@ -14,76 +14,105 @@ NeuralNetworkFF :: NeuralNetworkFF(
 	const vector<size_t>& nNeuronsPerLayer,
 	const vector<AFuncType>& AFuncPerLayer ) 
 	:
-	_numNeuronsPerLayer{ nNeuronsPerLayer },
+	_numNeurons_PerLayer{ nNeuronsPerLayer },
 	_numLayers{ nNeuronsPerLayer.size() },
 	_inputDimension{ inputDimension },
-	_activationFunctionPerLayer{ AFuncPerLayer }
+	_activationFunction_PerLayer{ AFuncPerLayer }
 {
 	// Resize vectors (each vector's element concerns a specific layer) 
-	_weightsPerLayer.resize(_numLayers);
-	_biasPerLayer.resize(_numLayers);
-	_activationFunctionPerLayer.resize(_numLayers);
+	_weights_PerLayer.resize(_numLayers);
+	_bias_PerLayer.resize(_numLayers);
+	_activationFunction_PerLayer.resize(_numLayers);
 
 	size_t layer{ 0 };
-	for (auto& weightMatrix : _weightsPerLayer) {
+	for (auto& weightMatrix : _weights_PerLayer) {
 		srand(time(0));
 
 		// Resize matrix and bias
 		if (layer == 0)
-			weightMatrix.resize(_numNeuronsPerLayer[layer], _inputDimension);
+			weightMatrix.resize(_numNeurons_PerLayer[layer], _inputDimension);
 		else
-			weightMatrix.resize(_numNeuronsPerLayer[layer], _numNeuronsPerLayer[layer - 1]);
+			weightMatrix.resize(_numNeurons_PerLayer[layer], _numNeurons_PerLayer[layer - 1]);
 
-		_biasPerLayer[layer].resize(_numNeuronsPerLayer[layer], 1); // It's a column vector
+		_bias_PerLayer[layer].resize(_numNeurons_PerLayer[layer], 1); // It's a column vector
 
 		// Random initialization of weights
 		for (auto& w : weightMatrix.data()) 
 			w = (Real)(((rand() % 21) - 10) * 0.1);	// Random value in [-1, 1]
 
 		// Random initialization of bias 
-		for (auto& b : _biasPerLayer[layer].data())
+		for (auto& b : _bias_PerLayer[layer].data())
 			b = (Real)(((rand() % 21) - 10) * 0.1);	// Random value in [-1, 1]
-
-		// Set allParams matrices
-		size_t numNeurons = _numNeuronsPerLayer[layer];		// All neurons
-		size_t numParams = _weightsPerLayer[layer].size2() + 1;	// All weights + bias
-		matrix<Real> params(numNeurons, numParams);
-
-		//	First columns ~> biases
-		for (const auto& i : RangeGen(0, params.size1()))
-			params(i, 0) = _biasPerLayer[layer](i, 0);
-
-		//	Remaining columns ~> weights
-		for (const auto& i : RangeGen(0, params.size1())) {
-			for (const auto& j : RangeGen(1, params.size2()))
-				params(i, j) = _weightsPerLayer[layer](i, j - 1);
-		}
-
-		_allParamsPerLayer.push_back(params);
 
 		layer++;
 	}
 }
 
-void NeuralNetworkFF::SetActivationFunction(const size_t idxLayer, const AFuncType AFunctionType) {
-	if (idxLayer < _activationFunctionPerLayer.size())
-		_activationFunctionPerLayer[idxLayer] = AFunctionType;
+size_t NeuralNetworkFF::GetNumNeurons_PerLayer(const size_t layer) throw(InvalidParametersException) {
+	if (layer >= _numLayers)
+		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
+
+	return _numNeurons_PerLayer[layer];
 }
 
-void NeuralNetworkFF::SetWeights(const size_t idxLayer, const matrix<Real>& newWeights) {
+matrix<Real> NeuralNetworkFF::GetWeights_PerLayer(const size_t layer) throw(InvalidParametersException){
+	if (layer >= _numLayers)
+		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
+
+	return _weights_PerLayer[layer];
+}
+
+matrix<Real> NeuralNetworkFF::GetBias_PerLayer(const size_t layer) throw(InvalidParametersException) {
+	if (layer >= _numLayers)
+		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
+
+	return _bias_PerLayer[layer];
+}
+
+AFuncType NeuralNetworkFF::GetAFunc_PerLayer(const size_t layer) throw(InvalidParametersException) {
+	if (layer >= _numLayers)
+		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
+
+	return _activationFunction_PerLayer[layer];
+}
+
+matrix<Real> NeuralNetworkFF::GetAllParam_PerLayer(const size_t layer) throw (InvalidParametersException) {
+	if (layer >= _numLayers)
+		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
+
+	// Set allParams matrices
+	size_t numNeurons = _numNeurons_PerLayer[layer];		// All neurons
+	size_t numParams = _weights_PerLayer[layer].size2() + 1;	// All weights + bias
+	matrix<Real> params(numNeurons, numParams);
+
+	//	First columns ~> biases
+	for (const auto& i : RangeGen(0, params.size1()))
+		params(i, 0) = _bias_PerLayer[layer](i, 0);
+
+	//	Remaining columns ~> weights
+	for (const auto& i : RangeGen(0, params.size1())) 
+		for (const auto& j : RangeGen(1, params.size2()))
+			params(i, j) = _weights_PerLayer[layer](i, j - 1);
+	
+	return params;
+}
+
+void NeuralNetworkFF::SetAFunc_PerLayer(const size_t layer, const AFuncType AFunctionType) {
+	if (layer >= _numLayers)
+		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
+
+	_activationFunction_PerLayer[layer] = AFunctionType;
+}
+
+void NeuralNetworkFF::SetAllWeights(const size_t layer, const matrix<Real>& newWeights) throw (InvalidParametersException) {
+	if (layer >= _numLayers)
+		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
 
 	// Tool to partially or totally copy a matrix
 	auto copyNewMatrix = [&](const size_t rows, const size_t cols){
-
-		for (const auto& i : RangeGen(0, rows)) {
-			for (const auto& j : RangeGen(0, cols)) {
-
-				_weightsPerLayer[idxLayer](i, j) = newWeights(i, j);
-
-				// j+1 because first column are reserved for biases
-				_allParamsPerLayer[idxLayer](i, j + 1) = newWeights(i, j);	
-			}
-		}
+		for (const auto& i : RangeGen(0, rows)) 
+			for (const auto& j : RangeGen(0, cols)) 
+				_weights_PerLayer[layer](i, j) = newWeights(i, j);
 	};
 
 	/* 
@@ -104,25 +133,25 @@ void NeuralNetworkFF::SetWeights(const size_t idxLayer, const matrix<Real>& newW
 	*/
 
 	// Checks to avoid out-of-range. Case: new.size1 > old.size1
-	if (newWeights.size1() > _weightsPerLayer[idxLayer].size1()) {
+	if (newWeights.size1() > _weights_PerLayer[layer].size1()) {
 
 		// Case: new.size2 > old.size2
-		if (newWeights.size2() > _weightsPerLayer[idxLayer].size2()) 
-			copyNewMatrix(_weightsPerLayer[idxLayer].size1(), _weightsPerLayer[idxLayer].size2());
+		if (newWeights.size2() > _weights_PerLayer[layer].size2()) 
+			copyNewMatrix(_weights_PerLayer[layer].size1(), _weights_PerLayer[layer].size2());
 		
 		// Case: new.size2 <= old.size2
 		else 
-			copyNewMatrix(_weightsPerLayer[idxLayer].size1(), newWeights.size2());
+			copyNewMatrix(_weights_PerLayer[layer].size1(), newWeights.size2());
 
 		return;
 	}
 
 	// Checks to avoid out-of-range. Case: new.size1 <= old.size1
-	if (newWeights.size1() <= _weightsPerLayer[idxLayer].size1()) {
+	if (newWeights.size1() <= _weights_PerLayer[layer].size1()) {
 
 		// Case: new.size2 > old.size2
-		if (newWeights.size2() > _weightsPerLayer[idxLayer].size2()) 
-			copyNewMatrix(newWeights.size1(), _weightsPerLayer[idxLayer].size2());
+		if (newWeights.size2() > _weights_PerLayer[layer].size2()) 
+			copyNewMatrix(newWeights.size1(), _weights_PerLayer[layer].size2());
 
 		// Case: new.size2 <= old.size2
 		else 
@@ -132,43 +161,49 @@ void NeuralNetworkFF::SetWeights(const size_t idxLayer, const matrix<Real>& newW
 	}
 }
 
-void NeuralNetworkFF::SetBias(const size_t idxLayer, vector<Real>& newBias) {
-	
-	// Checks to avoid out-of-range
-	if (newBias.size() > _numNeuronsPerLayer[idxLayer]) {
+void NeuralNetworkFF::SetAllBiases(const size_t layer, vector<Real>& newBias) throw (InvalidParametersException) {
+	if (layer >= _numLayers)
+		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
 
-		// Only first _numNeuronsPerLayer[idxLayer] elements are set
-		for (const auto& i : RangeGen (0, _numNeuronsPerLayer[idxLayer])) {
-			_biasPerLayer[idxLayer](i, 0) = newBias[i];
-			_allParamsPerLayer[idxLayer](i, 0) = newBias[i];
-		}
+	// Checks to avoid out-of-range
+	if (newBias.size() > _numNeurons_PerLayer[layer]) {
+		// Only first _numNeuronsPerLayer[layer] elements are set
+		for (const auto& i : RangeGen (0, _numNeurons_PerLayer[layer]))
+			_bias_PerLayer[layer](i, 0) = newBias[i];
 	}
 	else {
-
 		// Only first newBias.size() elements are set
-		for (const auto& i : RangeGen(0, newBias.size())) { 
-			_biasPerLayer[idxLayer](i, 0) = newBias[i];
-			_allParamsPerLayer[idxLayer](i, 0) = newBias[i];
-		}
+		for (const auto& i : RangeGen(0, newBias.size())) 
+			_bias_PerLayer[layer](i, 0) = newBias[i];
 	}
 }
 
-void NeuralNetworkFF::SetParamPerNeuron(const size_t idxLayer, const size_t idxNeuron, const size_t idxConnection, const Real newWeight) {
-	_allParamsPerLayer[idxLayer](idxNeuron, idxConnection) = newWeight;
+void NeuralNetworkFF::SetParam_PerNeuron(const size_t layer, const size_t neuron, const size_t conn, const Real newParam) 
+throw (InvalidParametersException) {
 
-	if (idxConnection > 0 && idxConnection < _weightsPerLayer[idxLayer].size2())
-		_weightsPerLayer[idxLayer](idxNeuron, idxConnection) = newWeight;
+	if (layer >= _numLayers)
+		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
+	if (neuron >= _numNeurons_PerLayer[layer])
+		throw InvalidParametersException("[NNFF] neuron must be in [0, ..., NumNeuron(layer)-1].");
+
+	//	In case of bias
+	if (conn == 0)
+		_bias_PerLayer[layer](neuron, conn) = newParam;
+	else
+		if (conn < _weights_PerLayer[layer].size2() + 1)
+			_weights_PerLayer[layer](neuron, conn - 1) = newParam;
+		else
+			throw InvalidParametersException("[NNFF] param doesn't exist.");
+
 }
 
-NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) {
+NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) throw (InvalidParametersException) {
 
 	NetworkResult netResult;
 
 	// Check compatibility between the input's dimension and the network
-	if (input.size() != _inputDimension) {
-		cout << "[ERROR] The network is not compatible with the input's dimension." << endl;
-	//	return vector<Real>(_numNeuronsPerLayer.back(), 0);
-	}
+	if (input.size() != _inputDimension) 
+		throw InvalidParametersException("[NNFF] input's dimension must be compatible with the network.");
 
 	matrix<Real> activation;
 	vector<Real> input_with_bias;
@@ -185,14 +220,14 @@ NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) {
 
 	//	From the input layer to the last hidden layer
 	for (const auto& layer : RangeGen(0, _numLayers - 1)) {
-		activation = prod(_allParamsPerLayer[layer], outputLayer);
+		activation = prod(GetAllParam_PerLayer(layer), outputLayer);
 
 		// Compute the output layer
-		outputLayer.resize(_numNeuronsPerLayer[layer] + 1, 1);
+		outputLayer.resize(_numNeurons_PerLayer[layer] + 1, 1);
 		outputLayer(0, 0) = 1;	//	For the bias
 		
 		for (const auto& idxNeuron : RangeGen(0, activation.size1()))
-			outputLayer(idxNeuron+1, 0) = ActivationFunction::AFunction[_activationFunctionPerLayer[layer]](activation(idxNeuron, 0));
+			outputLayer(idxNeuron+1, 0) = ActivationFunction::AFunction[_activationFunction_PerLayer[layer]](activation(idxNeuron, 0));
 
 		// Fill the NetworkResult structure
 		netResult.activationsPerLayer.push_back(activation);
@@ -202,11 +237,12 @@ NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) {
 	}
 
 	//	For the output layer: compute the output network
-	activation = prod(_allParamsPerLayer[_numLayers - 1], outputLayer);
-	outputLayer.resize(_numNeuronsPerLayer[_numLayers - 1], 1);
+	activation = prod(GetAllParam_PerLayer(_numLayers - 1), outputLayer);
+
+	outputLayer.resize(_numNeurons_PerLayer[_numLayers - 1], 1);
 
 	for (const auto& idxNeuron : RangeGen(0, activation.size1()))
-		outputLayer(idxNeuron, 0) = ActivationFunction::AFunction[_activationFunctionPerLayer[_numLayers - 1]](activation(idxNeuron, 0));
+		outputLayer(idxNeuron, 0) = ActivationFunction::AFunction[_activationFunction_PerLayer[_numLayers - 1]](activation(idxNeuron, 0));
 
 	netResult.activationsPerLayer.push_back(activation);
 	netResult.neuronsOutputPerLayer.push_back(outputLayer);
@@ -218,7 +254,7 @@ void NeuralNetworkFF::PrintNetwork() {
 
 	// Print all index layer, weights and bias
 	size_t idxLayer{ 0 };
-	for (const auto& weightMatrix : _weightsPerLayer) {
+	for (const auto& weightMatrix : _weights_PerLayer) {
 
 		string layer;
 
@@ -241,12 +277,12 @@ void NeuralNetworkFF::PrintNetwork() {
 		cout << endl;
 
 		cout << "Bias:" << endl;
-		for (const auto& i : RangeGen(0, _biasPerLayer[idxLayer].size1()))
-			cout << _biasPerLayer[idxLayer](i, 0) << endl;
+		for (const auto& i : RangeGen(0, _bias_PerLayer[idxLayer].size1()))
+			cout << _bias_PerLayer[idxLayer](i, 0) << endl;
 		cout << endl;
 
 		cout << "The activation function: " << 
-			NameOfAFuncType(_activationFunctionPerLayer[idxLayer]) << endl;
+			NameOfAFuncType(_activationFunction_PerLayer[idxLayer]) << endl;
 		cout << endl;
 
 		idxLayer++;

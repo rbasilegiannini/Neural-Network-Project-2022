@@ -14,7 +14,7 @@ bool Test_GradientChecking(const NeuralNetworkFF& NN, const vector<Real>& gradTo
 	Real e = 0.0001;
 	
 	for (const auto& layer : RangeGen(0, net.GetNumLayers()))
-		allParamsPerLayer.push_back(net.GetAllParamPerLayer(layer)); // Weights and biases
+		allParamsPerLayer.push_back(net.GetAllParam_PerLayer(layer)); // Weights and biases
 
 	//	From input layer to the Output layer
 	for (const auto& layer : RangeGen(0, net.GetNumLayers())) {
@@ -31,7 +31,7 @@ bool Test_GradientChecking(const NeuralNetworkFF& NN, const vector<Real>& gradTo
 				matrix<Real> output_minus;
 
 				// Compute output_plus
-				net.SetParamPerNeuron(layer, neuron, conn, param_plus_e);
+				net.SetParam_PerNeuron(layer, neuron, conn, param_plus_e);
 				auto temp_plus = net.ComputeNetwork(input).neuronsOutputPerLayer.back();
 
 				output_plus.resize(temp_plus.size1(),1);
@@ -41,7 +41,7 @@ bool Test_GradientChecking(const NeuralNetworkFF& NN, const vector<Real>& gradTo
 				auto error_plus = ErrorFunction::EFunction[EFuncType](output_plus, target);
 
 				// Compute output_minus
-				net.SetParamPerNeuron(layer, neuron, conn, param_minus_e);
+				net.SetParam_PerNeuron(layer, neuron, conn, param_minus_e);
 				auto temp_minus = net.ComputeNetwork(input).neuronsOutputPerLayer.back();
 
 				output_minus.resize(temp_minus.size1(),1);
@@ -56,7 +56,7 @@ bool Test_GradientChecking(const NeuralNetworkFF& NN, const vector<Real>& gradTo
 				gradE_checking.push_back(d_E_ij);
 
 				//	Restore default values
-				net.SetParamPerNeuron(layer, neuron, conn, originalParam);
+				net.SetParam_PerNeuron(layer, neuron, conn, originalParam);
 
 			}
 		}

@@ -52,7 +52,6 @@ vector<Real> BackPropagation(const DataFromNetwork& dataNN, const ErrorFuncType 
 
 			EFuncType = ErrorFuncType::CROSSENTROPY;
 		}
-
 	}
 
 	if (EType == ErrorFuncType::CROSSENTROPY) {

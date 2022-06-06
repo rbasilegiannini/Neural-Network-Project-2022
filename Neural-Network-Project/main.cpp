@@ -24,11 +24,12 @@ using boost::numeric::ublas::subrange;
 using namespace std::chrono;
 
 int main() {
-/*
+/**
 	const vector<size_t> _numNeuronsPerLayer{ 3, 1, 1};
 	const vector<Real> input { 1, 1 };
+	vector<AFuncType> AFuncPerLayer(_numNeuronsPerLayer.size(), AFuncType::SIGMOID);
 
-	NeuralNetworkFF net (2, _numNeuronsPerLayer);
+	NeuralNetworkFF net (2, _numNeuronsPerLayer, AFuncPerLayer);
 
 	vector<matrix<Real>> weights(3);
 	weights[0].resize(3, 2);
@@ -56,16 +57,17 @@ int main() {
 	weights[2](0, 0) = 0.6 + add;
 
 	for (size_t i{ 0 }; i < _numNeuronsPerLayer.size(); i++) {
-		net.SetWeights(i, weights[i]);
+		net.SetAllWeights(i, weights[i]);
 
 		vector<Real> vecZero(_numNeuronsPerLayer[i], 0);
-		net.SetBias(i, vecZero);	// Bias to zero
+		net.SetAllBiases(i, vecZero);	// Bias to zero
 	}
 
 //	net.PrintNetwork();
-/*
-	auto params0 = net.GetAllParamPerLayer(0);
-	auto params1 = net.GetAllParamPerLayer(1);
+
+	auto params0 = net._GetAllParam_PerLayer(0);
+	auto params1 = net._GetAllParam_PerLayer(1);
+	auto params2 = net._GetAllParam_PerLayer(2);
 
 	for (size_t i = 0; i < params0.size1(); i++) {
 		for (size_t j = 0; j < params0.size2(); j++)
@@ -80,7 +82,7 @@ int main() {
 		cout << endl;
 	}
 	cout << endl;
-*/
+
 
 #pragma region	Test compute network	
 /* *
@@ -230,17 +232,18 @@ int main() {
 			EFuncType = ErrorFuncType::SUMOFSQUARES;
 			break;
 		case 1:
-			EFuncType = ErrorFuncType::CROSSENTROPY;
+			EFuncType = ErrorFuncType::CROSSENTROPY_SOFTMAX;
+			nn.SetAFunc_PerLayer(nn.GetNumLayers() - 1, AFuncType::IDENTITY);
 
 			break;
 		case 2:
-			EFuncType = ErrorFuncType::CROSSENTROPY_SOFTMAX;
-			nn.SetActivationFunction(nn.GetNumLayers() - 1, AFuncType::IDENTITY);
+			EFuncType = ErrorFuncType::CROSSENTROPY;
 
 			break;
 
 		default:
-			EFuncType = ErrorFuncType::CROSSENTROPY;
+			EFuncType = ErrorFuncType::CROSSENTROPY_SOFTMAX;
+			nn.SetAFunc_PerLayer(nn.GetNumLayers() - 1, AFuncType::IDENTITY);			
 			break;
 		}
 

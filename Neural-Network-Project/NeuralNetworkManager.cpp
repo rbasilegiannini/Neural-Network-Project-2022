@@ -53,7 +53,7 @@ void NeuralNetworkManager::SetAFunc_PerLayer(const size_t layer, const AFuncType
 	if (layer >= _neuralNetwork.GetNumLayers())
 		throw InvalidParametersException("[MANAGER] layer must be in [0, ..., NetworkLayer-1].");
 
-	_neuralNetwork.SetActivationFunction(layer, AFunctionType);
+	_neuralNetwork.SetAFunc_PerLayer(layer, AFunctionType);
 }
 
 NeuralNetworkManager::NeuralNetworkManager(const Hyperparameters& hyp) 
