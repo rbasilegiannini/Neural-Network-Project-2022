@@ -33,7 +33,11 @@ public:
 	 * \param	inputDimension is the input's dimension accepted by the network.
 	 * \param	nNeuronsPerLayer is the vector that contains the number of neurons for each layer.
 	 */
-	NeuralNetworkFF(const size_t inputDimension, const vector<size_t>& nNeuronsPerLayer);
+	NeuralNetworkFF(
+		const size_t inputDimension, 
+		const vector<size_t>& nNeuronsPerLayer, 
+		const vector<AFuncType>& AFuncPerLayer
+		);
 
 	size_t GetNumLayers() { return _numLayers; }
 	size_t GetNumNeuronsPerLayer(const size_t idxLayer) { return _numNeuronsPerLayer[idxLayer]; }

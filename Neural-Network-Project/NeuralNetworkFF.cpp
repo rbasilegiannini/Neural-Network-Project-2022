@@ -9,10 +9,15 @@ using std::cout;
 using std::endl;
 using boost::numeric::ublas::subrange;
 
-NeuralNetworkFF :: NeuralNetworkFF(const size_t inputDimension, const vector<size_t>& nNeuronsPerLayer) :
+NeuralNetworkFF :: NeuralNetworkFF(
+	const size_t inputDimension, 
+	const vector<size_t>& nNeuronsPerLayer,
+	const vector<AFuncType>& AFuncPerLayer ) 
+	:
 	_numNeuronsPerLayer{ nNeuronsPerLayer },
 	_numLayers{ nNeuronsPerLayer.size() },
-	_inputDimension{ inputDimension }
+	_inputDimension{ inputDimension },
+	_activationFunctionPerLayer{ AFuncPerLayer }
 {
 	// Resize vectors (each vector's element concerns a specific layer) 
 	_weightsPerLayer.resize(_numLayers);
@@ -58,10 +63,6 @@ NeuralNetworkFF :: NeuralNetworkFF(const size_t inputDimension, const vector<siz
 
 		layer++;
 	}
-
-	// Default activation functions: SIGMOID
-	for (auto& AFunc : _activationFunctionPerLayer)
-		AFunc = AFuncType::SIGMOID;
 }
 
 void NeuralNetworkFF::SetActivationFunction(const size_t idxLayer, const AFuncType AFunctionType) {
