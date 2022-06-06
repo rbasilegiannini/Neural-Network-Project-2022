@@ -199,10 +199,10 @@ int main() {
 		matrix<Real> target;
 
 		// Set nNeuronPerLayer
-		nNeuronsPerLayer.resize(20 * nTest);
+		nNeuronsPerLayer.resize(5 * nTest);
 
 		for (auto& nNeuron : nNeuronsPerLayer)
-			nNeuron = (rand() % 10) + 1;
+			nNeuron = (rand() % 10) + 10;
 
 		// Set target
 		target.resize(nNeuronsPerLayer.back(),1);
@@ -213,13 +213,14 @@ int main() {
 		target(rand()% target.size1(), 0) = 1;
 
 		// Set input 
-		input.resize(100);
+		input.resize(100*nTest);
 
 		for (auto& i : input)
 			i = (Real)(((rand() % 21) - 10) * 0.1);	// Random value in [-1, 1]
 
 		// Create the NN
-		NeuralNetworkFF nn(input.size(), nNeuronsPerLayer);
+		vector<AFuncType> AFuncPerLayer(nNeuronsPerLayer.size(), AFuncType::SIGMOID);
+		NeuralNetworkFF nn(input.size(), nNeuronsPerLayer, AFuncPerLayer);
 
 		ErrorFuncType EFuncType;
 		size_t choice{ (size_t)(rand() % 3)};
@@ -254,9 +255,9 @@ int main() {
 		vector<matrix<Real>> weightsPerLayer;
 
 		for (const auto& layer : RangeGen(0, nn.GetNumLayers())) {
-			allNeuronsNumber.push_back(nn.GetNumNeuronsPerLayer(layer));
-			allAFunc.push_back(nn.GetAFuncPerLayer(layer));
-			weightsPerLayer.push_back(nn.GetWeightsPerLayer(layer));
+			allNeuronsNumber.push_back(nn.GetNumNeurons_PerLayer(layer));
+			allAFunc.push_back(nn.GetAFunc_PerLayer(layer));
+			weightsPerLayer.push_back(nn.GetWeights_PerLayer(layer));
 		}
 
 		DataFromNetwork dataNN	{
@@ -270,12 +271,14 @@ int main() {
 		};
 
 		auto start_bp = high_resolution_clock::now();
-		auto gradE = BackPropagation::BProp(dataNN, EFuncType, target);
+		auto gradE = BackPropagation(dataNN, EFuncType, target);
 		auto stop_bp = high_resolution_clock::now();
 
-		auto duration_bp = duration_cast<seconds>(stop_bp - start_bp);
+		auto duration_bp = duration_cast<milliseconds>(stop_bp - start_bp);
 
-		//	Testing & compare
+//		cout << "Time: " << duration_bp.count()<< "ms. " << endl;
+
+	//	Testing & compare
 		auto start_chk = high_resolution_clock::now();
 		bool test = Test_GradientChecking(nn, gradE, EFuncType, input, target);
 		auto stop_chk = high_resolution_clock::now();
@@ -290,7 +293,7 @@ int main() {
 			cout << "Fail! ";
 
 		cout << "Loss function: " << NameOfErrorFuncType(EFuncType) << endl;
-
+		
 	}
 /**/
 #pragma endregion

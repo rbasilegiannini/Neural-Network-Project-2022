@@ -3,7 +3,7 @@
 
 using std::deque;
 
-vector<Real> BackPropagation::BProp(const DataFromNetwork& dataNN, const ErrorFuncType EType, const matrix<Real>& targets) {
+vector<Real> BackPropagation(const DataFromNetwork& dataNN, const ErrorFuncType EType, const matrix<Real>& targets) {
 	auto nLayers = dataNN.numLayers;
 	auto AFuncLayer = dataNN.AFunctionDerivativePerLayer;
 	auto AValLayer = dataNN.activationsPerLayer;
@@ -21,7 +21,7 @@ vector<Real> BackPropagation::BProp(const DataFromNetwork& dataNN, const ErrorFu
 			outputs(k, 0) = SoftMax(outputsLayer.back(), k);
 		}
 
-		*(outputsLayer.end() - 1) = outputs;
+		outputsLayer.back() = outputs;
 	};
 
 	AFuncType AFuncType = AFuncLayer.back();

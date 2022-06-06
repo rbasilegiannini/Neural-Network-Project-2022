@@ -44,7 +44,7 @@ vector<Real> NeuralNetworkManager::ComputeGradE_PerSample(const ErrorFuncType EF
 	for (const auto& k : RangeGen(0, targets.size()))
 		matTarget(k, 0) = targets[k];
 	
-	gradE = BackPropagation::BProp(dataNN, EFuncType, matTarget);
+	gradE = BackPropagation(dataNN, EFuncType, matTarget);
 
 	return gradE;
 }
