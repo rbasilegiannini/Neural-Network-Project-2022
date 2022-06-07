@@ -13,9 +13,9 @@ using std::vector;
  */
 
 /**
-	Real has the double precision. 
+	Real has the float precision. 
  */
-typedef long double Real;
+typedef float Real;
 
 /**
  *	Range generator.

@@ -18,7 +18,7 @@ using std::string;
 /**
  * @brief All activation functions provided are reachable by these enums.
  */
-enum class AFuncType {SIGMOID, IDENTITY};
+enum class AFuncType {SIGMOID, IDENTITY, RELU};
 
 /**
  * This function returns the name of the activation function.
@@ -38,10 +38,12 @@ public:
 	ActivationFunction() = delete;
 
 	static map <AFuncType, function<Real(const Real)>> AFunction;
-	static map <AFuncType, function<Real(const Real)>> AFunctionDerivative;
+	static map <AFuncType, function<Real(const Real)>> AFunction_Der;
 
 private:
 	static Real _sigmoid(const Real input);
 	static Real _identity(const Real input);
-	static Real _sigmoidDerivative(const Real input);
+	static Real _relu(const Real input);
+	static Real _sigmoid_Der(const Real input);
+	static Real _relu_Der(const Real input);
 };

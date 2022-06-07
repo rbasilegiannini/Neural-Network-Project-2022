@@ -8,7 +8,6 @@
 using std::vector;
 using boost::numeric::ublas::matrix;
 
-
 /**
  	This data structure contains the result of the network computation:
  	- the neurons' output (a column vector for each layer)

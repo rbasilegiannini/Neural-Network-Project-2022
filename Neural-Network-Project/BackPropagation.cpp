@@ -32,7 +32,7 @@ throw (InvalidParametersException) {
 		auto a_k = AValLayer.back()(neuron, 0);
 		auto y_k = outputsLayer.back()(neuron, 0);
 		auto t_k = target(neuron,0);
-		auto AFuncDer_k = ActivationFunction::AFunctionDerivative[AFuncType];
+		auto AFuncDer_k = ActivationFunction::AFunction_Der[AFuncType];
 		auto EFuncDer_k = ErrorFunction::EFunctionDer_RespectOutput[EType];
 
 		return (AFuncDer_k(a_k) * EFuncDer_k(y_k, t_k));
@@ -93,7 +93,7 @@ throw (InvalidParametersException) {
 		for (const auto& neuron : RangeGen(0, nNeuronsLayer[layer])) {
 
 			auto a_i = AValLayer[layer](neuron, 0);
-			auto AFuncDer_i = ActivationFunction::AFunctionDerivative[AFuncType];
+			auto AFuncDer_i = ActivationFunction::AFunction_Der[AFuncType];
 
 			//	Compute the summation, for all the neurons of the next layer
 			Real summation{ 0 };
