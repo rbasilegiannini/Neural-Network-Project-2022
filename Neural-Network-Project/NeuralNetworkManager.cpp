@@ -17,8 +17,11 @@ void NeuralNetworkManager::Run(const vector<Real>& input) {
 	}
 }
 
-vector<Real> NeuralNetworkManager::ComputeGradE_PerSample(const ErrorFuncType EFuncType, const vector<Real>& targets) {
-	
+vector<Real> NeuralNetworkManager::ComputeGradE_PerSample(const ErrorFuncType EFuncType, const vector<Real>& targets) 
+throw (InvalidParametersException) {
+	if (_netResult.activationsPerLayer.empty())
+		throw InvalidParametersException("[MANAGER] it's mandatory to perform a forward propagation step first.");
+
 	vector<Real> gradE;
 
 	//	Fill DataFromNetwork structure
@@ -59,7 +62,7 @@ vector<Real> NeuralNetworkManager::ComputeGradE_PerSample(const ErrorFuncType EF
 
 void NeuralNetworkManager::SetAllParam_PerLayer(const size_t layer, const matrix<Real>& newMat) {
 	try {
-		_neuralNetwork.SetAllParams_PerLayer(layer, newMat);
+		_neuralNetwork.SetAllParam_PerLayer(layer, newMat);
 	}
 	catch (InvalidParametersException e) {
 		std::cout << e.getErrorMessage() << std::endl;

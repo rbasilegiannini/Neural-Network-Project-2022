@@ -6,6 +6,7 @@
 #include "ErrorFunction.h"
 #include "BackPropagation.h"
 #include "TestFunction.h"
+#include "NeuralNetworkManager.h"
 
 #include <vector>
 #include <boost/numeric/ublas/matrix.hpp>
@@ -29,7 +30,8 @@ int main() {
 	const vector<Real> input { 1, 1 };
 	vector<AFuncType> AFuncPerLayer(_numNeuronsPerLayer.size(), AFuncType::SIGMOID);
 
-	NeuralNetworkFF net (2, _numNeuronsPerLayer, AFuncPerLayer);
+	Hyperparameters hyp({ input.size(), _numNeuronsPerLayer, AFuncPerLayer });
+	NeuralNetworkManager& nnManager = NeuralNetworkManager::GetNNManager(hyp);
 
 	vector<matrix<Real>> weights(3);
 	weights[0].resize(3, 2);
@@ -56,14 +58,8 @@ int main() {
 	// W3
 	weights[2](0, 0) = 0.6 + add;
 
-	for (size_t i{ 0 }; i < _numNeuronsPerLayer.size(); i++) {
-//		net.SetAllWeights(i, weights[i]);
-
-		vector<Real> vecZero(_numNeuronsPerLayer[i], 0);
-//		net.SetAllBiases(i, vecZero);	// Bias to zero
-	}
 	cout << "Old mat: " << endl;
-	net.PrintNetwork();
+	nnManager.PrintNetwork();
 
 	matrix<Real> matParam1(3,3);
 	for (const auto& neuron : RangeGen(0, matParam1.size1())) {
@@ -73,17 +69,17 @@ int main() {
 			matParam1(neuron, conn + 1) = weights[0](neuron, conn);
 	}
 	
-	net.SetAllParams_PerLayer(0, matParam1);
+	nnManager.SetAllParam_PerLayer(0, matParam1);
 
 	cout << "'New mat: " << endl;
 
-	net.PrintNetwork();
+	nnManager.PrintNetwork();
 
 	cout << "Again: " << endl;
 
-	auto params0 = net.GetAllParam_PerLayer(0);
-	auto params1 = net.GetAllParam_PerLayer(1);
-	auto params2 = net.GetAllParam_PerLayer(2);
+	auto params0 = nnManager.GetAllParam_PerLayer(0);
+	auto params1 = nnManager.GetAllParam_PerLayer(1);
+	auto params2 = nnManager.GetAllParam_PerLayer(2);
 
 	for (size_t i = 0; i < params0.size1(); i++) {
 		for (size_t j = 0; j < params0.size2(); j++)
@@ -209,7 +205,12 @@ int main() {
 #pragma endregion
 
 #pragma region Test Gradient computation
+
 /**/
+Hyperparameters hyp({});
+NeuralNetworkManager& nnManager = NeuralNetworkManager::GetNNManager(hyp);
+
+
 	for (const auto& nTest : RangeGen(1, 21)) {
 
 		vector<size_t> nNeuronsPerLayer;
@@ -238,7 +239,9 @@ int main() {
 
 		// Create the NN
 		vector<AFuncType> AFuncPerLayer(nNeuronsPerLayer.size(), AFuncType::SIGMOID);
-		NeuralNetworkFF nn(input.size(), nNeuronsPerLayer, AFuncPerLayer);
+
+		Hyperparameters newHyp({ input.size(), nNeuronsPerLayer, AFuncPerLayer });
+		nnManager.ResetHyperparameters(newHyp);
 
 		ErrorFuncType EFuncType;
 		size_t choice{ (size_t)(rand() % 3)};
@@ -249,7 +252,7 @@ int main() {
 			break;
 		case 1:
 			EFuncType = ErrorFuncType::CROSSENTROPY_SOFTMAX;
-			nn.SetAFunc_PerLayer(nn.GetNumLayers() - 1, AFuncType::IDENTITY);
+			nnManager.SetAFunc_PerLayer(nnManager.GetNumLayers() - 1, AFuncType::IDENTITY);
 
 			break;
 		case 2:
@@ -259,38 +262,24 @@ int main() {
 
 		default:
 			EFuncType = ErrorFuncType::CROSSENTROPY_SOFTMAX;
-			nn.SetAFunc_PerLayer(nn.GetNumLayers() - 1, AFuncType::IDENTITY);			
+			nnManager.SetAFunc_PerLayer(nnManager.GetNumLayers() - 1, AFuncType::IDENTITY);
 			break;
 		}
 
-		// FP step
-		auto nnResult = nn.ComputeNetwork(input);
-		auto activationsPerLayer = nnResult.activationsPerLayer;
-		vector<matrix<Real>> neuronsOutputPerLayer = nnResult.neuronsOutputPerLayer;
+		vector<Real> targetVec(nNeuronsPerLayer.back());
+		for (const auto& t : RangeGen(0, target.size1()))
+			targetVec[t] = target(t,0);
 
-		// BP step
-		vector<size_t> allNeuronsNumber;
-		vector<AFuncType> allAFunc;
-		vector<matrix<Real>> weightsPerLayer;
-
-		for (const auto& layer : RangeGen(0, nn.GetNumLayers())) {
-			allNeuronsNumber.push_back(nn.GetNumNeurons_PerLayer(layer));
-			allAFunc.push_back(nn.GetAFunc_PerLayer(layer));
-			weightsPerLayer.push_back(nn.GetWeights_PerLayer(layer));
-		}
-
-		DataFromNetwork dataNN	{
-			nn.GetNumLayers(),
-			allNeuronsNumber,
-			activationsPerLayer,
-			weightsPerLayer,
-			allAFunc,
-			neuronsOutputPerLayer,
-			input
-		};
-
+//		nnManager.Run(input);
+		vector<Real> gradE;
 		auto start_bp = high_resolution_clock::now();
-		auto gradE = BackPropagation(dataNN, EFuncType, target);
+		try {
+			gradE = nnManager.ComputeGradE_PerSample(EFuncType, targetVec);
+		}
+		catch (InvalidParametersException e) {
+			std::cout << e.getErrorMessage() << std::endl;
+			return -1;
+		}
 		auto stop_bp = high_resolution_clock::now();
 
 		auto duration_bp = duration_cast<milliseconds>(stop_bp - start_bp);
@@ -298,6 +287,7 @@ int main() {
 //		cout << "Time: " << duration_bp.count()<< "ms. " << endl;
 
 	//	Testing & compare
+		auto nn = nnManager.getNet();
 		auto start_chk = high_resolution_clock::now();
 		bool test = Test_GradientChecking(nn, gradE, EFuncType, input, target);
 		auto stop_chk = high_resolution_clock::now();

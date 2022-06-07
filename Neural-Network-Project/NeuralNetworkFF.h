@@ -50,7 +50,7 @@ public:
 
 	void SetParam_PerNeuron(const size_t layer, const size_t neuron,const size_t conn, const Real newParam)	
 		throw (InvalidParametersException);
-	void SetAllParams_PerLayer(const size_t layer, const matrix<Real>& newMat)	throw (InvalidParametersException);
+	void SetAllParam_PerLayer(const size_t layer, const matrix<Real>& newMat)	throw (InvalidParametersException);
 	void SetAFunc_PerLayer(const size_t layer, const AFuncType AFuncType)	throw (InvalidParametersException);
 	void SetAllWeights(const size_t layer, const matrix<Real>& newWeights)	throw (InvalidParametersException);
 	void SetAllBiases(const size_t layer, const vector<Real>& newBias)	throw (InvalidParametersException);

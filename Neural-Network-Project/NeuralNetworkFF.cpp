@@ -9,16 +9,11 @@ using std::cout;
 using std::endl;
 using boost::numeric::ublas::subrange;
 
-NeuralNetworkFF :: NeuralNetworkFF(
-	const size_t inputDimension, 
-	const vector<size_t>& nNeuronsPerLayer,
-	const vector<AFuncType>& AFuncPerLayer ) 
-	:
-	_numNeurons_PerLayer{ nNeuronsPerLayer },
-	_numLayers{ nNeuronsPerLayer.size() },
-	_inputDimension{ inputDimension },
-	_activationFunction_PerLayer{ AFuncPerLayer }
-{
+NeuralNetworkFF :: NeuralNetworkFF(const size_t inputDim, const vector<size_t>& nNeuronsPerLayer, const vector<AFuncType>& AFuncPerLayer ) {
+	_numNeurons_PerLayer = nNeuronsPerLayer;
+	_numLayers = nNeuronsPerLayer.size();
+	_inputDimension = inputDim;
+	_activationFunction_PerLayer = AFuncPerLayer;
 	
 	// Resize vectors (each vector's element concerns a specific layer) 
 	_weights_PerLayer.resize(_numLayers);
@@ -187,7 +182,7 @@ throw (InvalidParametersException) {
 
 }
 
-void NeuralNetworkFF::SetAllParams_PerLayer(const size_t layer, const matrix<Real>& newMat) throw(InvalidParametersException) {
+void NeuralNetworkFF::SetAllParam_PerLayer(const size_t layer, const matrix<Real>& newMat) throw(InvalidParametersException) {
 	if (layer >= _numLayers)
 		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
 	if (_numNeurons_PerLayer[layer] != newMat.size1())

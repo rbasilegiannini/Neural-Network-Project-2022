@@ -11,9 +11,9 @@
 	- the activation function for each layer.
  */
 struct Hyperparameters {
-	const size_t inputDimension;
-	const vector<size_t> numNeuronsPerLayer;
-	const vector<AFuncType> AFuncPerLayer;
+	size_t inputDimension { 1 };
+	vector<size_t> numNeuronsPerLayer{ 1 };
+	vector<AFuncType> AFuncPerLayer {AFuncType::SIGMOID};
 };
 
 /**
@@ -47,7 +47,8 @@ public:
 	 * \param	target
 	 * \return	A vector cointaining the partial derivatives of the error function.
 	 */
-	vector<Real> ComputeGradE_PerSample(const ErrorFuncType EFuncType, const vector<Real>& target);
+	vector<Real> ComputeGradE_PerSample(const ErrorFuncType EFuncType, const vector<Real>& target) 
+		throw (InvalidParametersException);
 
 	/**
 	 *	This function initializes the neural network's parameteres with random value.
@@ -72,6 +73,8 @@ public:
 	 */
 	matrix<Real> GetAllParam_PerLayer(const size_t layer);
 
+	size_t GetNumLayers() { return _neuralNetwork.GetNumLayers(); }
+
 	/**
 	 *	This setter sets the matrix of parameteres for a given layer.
 	 * 
@@ -87,7 +90,11 @@ public:
 	 * \param AFunctionType
 	 */
 	void SetAFunc_PerLayer(const size_t layer, const AFuncType AFunctionType);
+	
+	void PrintNetwork() { _neuralNetwork.PrintNetwork(); }
 
+	///DEBUG FUNCTION
+	NeuralNetworkFF getNet() { return _neuralNetwork; }
 private:
 	//	Singleton
 	NeuralNetworkManager() = default;
