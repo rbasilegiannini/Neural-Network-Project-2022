@@ -38,7 +38,7 @@ public:
 	 * \param input
 	 * \return 
 	 */
-	void Run(const vector<Real>& input);
+	void Run(const vec_r& input);
 
 	/**
 	 *	This method compute the gradient of the error function for a sample.
@@ -47,7 +47,7 @@ public:
 	 * \param	target
 	 * \return	A vector cointaining the partial derivatives of the error function.
 	 */
-	vector<Real> ComputeGradE_PerSample(const ErrorFuncType EFuncType, const vector<Real>& target) 
+	vec_r ComputeGradE_PerSample(const EFuncType EType, const vec_r& target)
 		throw (InvalidParametersException);
 
 	/**
@@ -71,7 +71,7 @@ public:
 	 * \param layer
 	 * \return	A matrix with all paramateres for a given layer.
 	 */
-	matrix<Real> GetAllParam_PerLayer(const size_t layer);
+	mat_r GetAllParam_PerLayer(const size_t layer);
 
 	size_t GetNumLayers() { return _neuralNetwork.GetNumLayers(); }
 
@@ -104,6 +104,6 @@ private:
 
 	NeuralNetworkFF _neuralNetwork;
 	NetworkResult _netResult;
-	vector<Real> _input;
+	vec_r _input;
 };
 

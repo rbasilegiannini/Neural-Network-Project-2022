@@ -52,7 +52,7 @@ public:
 	void SetAllParam_PerLayer(const size_t layer, const mat_r& newMat)	throw (InvalidParametersException);
 	void SetAFunc_PerLayer(const size_t layer, const AFuncType AFuncType)	throw (InvalidParametersException);
 	void SetAllWeights(const size_t layer, const mat_r& newWeights)	throw (InvalidParametersException);
-	void SetAllBiases(const size_t layer, const vector<Real>& newBias)	throw (InvalidParametersException);
+	void SetAllBiases(const size_t layer, const vec_r& newBias)	throw (InvalidParametersException);
 
 	/**
 	 *	This function computes the output of the network based on the current weights and bias.
@@ -61,7 +61,7 @@ public:
 	 *			the input of the network.
 	 * \return	A vector of reals that contains the result of the computation.
 	 */
-	NetworkResult ComputeNetwork(const vector<Real>& input)	throw (InvalidParametersException);
+	NetworkResult ComputeNetwork(const vec_r& input)	throw (InvalidParametersException);
 
 	/**
 	 *	This function initializes the neural network's parameteres with random value.

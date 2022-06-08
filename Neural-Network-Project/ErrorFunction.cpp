@@ -2,45 +2,45 @@
 #include "Utility.h" 
 #include <iostream>
 
-map<ErrorFuncType, function<Real(const mat_r&, const mat_r&)>> ErrorFunction::EFunction = {
+map<EFuncType, function<Real(const mat_r&, const mat_r&)>> ErrorFunction::EFunction = {
 
-    { ErrorFuncType::SUMOFSQUARES, [](const mat_r& output, const mat_r& target) {
+    { EFuncType::SUMOFSQUARES, [](const mat_r& output, const mat_r& target) {
         return _sumOfSquares(output, target); }},
 
-	{ ErrorFuncType::CROSSENTROPY, [](const mat_r& output, const mat_r& target) {
+	{ EFuncType::CROSSENTROPY, [](const mat_r& output, const mat_r& target) {
 		return _crossEntropy(output, target); }},
 
-	{ ErrorFuncType::CROSSENTROPY_SOFTMAX, [](const mat_r& output, const mat_r& target) {
+	{ EFuncType::CROSSENTROPY_SOFTMAX, [](const mat_r& output, const mat_r& target) {
 		return _crossEntropy_softMax(output, target); }}
 };
 
-map<ErrorFuncType, function<Real(const Real, const Real)>> ErrorFunction::EFunctionDer_RespectOutput = {
+map<EFuncType, function<Real(const Real, const Real)>> ErrorFunction::EFunctionDer_RespectOutput = {
 
-	{ ErrorFuncType::SUMOFSQUARES, [](const Real output, const Real target) {
+	{ EFuncType::SUMOFSQUARES, [](const Real output, const Real target) {
 		return _sumOfSquaresDer(output, target); }},
 
-	{ ErrorFuncType::CROSSENTROPY, [](const Real output, const Real target) {
+	{ EFuncType::CROSSENTROPY, [](const Real output, const Real target) {
 		return _crossEntropyDer(output, target); }},
 
-	{ ErrorFuncType::CROSSENTROPY_SOFTMAX, [](const Real output, const Real target) {
+	{ EFuncType::CROSSENTROPY_SOFTMAX, [](const Real output, const Real target) {
 		return _crossEntropyDer_softMax(output, target); }}
 
 };
 
-string NameOfErrorFuncType(const ErrorFuncType type) {
+string NameOfErrorFuncType(const EFuncType type) {
 
 	string name;
 	switch (type)
 	{
-	case ErrorFuncType::SUMOFSQUARES:
+	case EFuncType::SUMOFSQUARES:
 		name = "SUMOFSQUARES";
 		break;
 
-	case ErrorFuncType::CROSSENTROPY:
+	case EFuncType::CROSSENTROPY:
 		name = "CROSSENTROPY";
 		break;
 
-	case ErrorFuncType::CROSSENTROPY_SOFTMAX:
+	case EFuncType::CROSSENTROPY_SOFTMAX:
 		name = "CROSSENTROPY_SOFTMAX";
 		break;
 

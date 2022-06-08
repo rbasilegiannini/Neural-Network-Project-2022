@@ -3,7 +3,7 @@
 
 using std::deque;
 
-vector<Real> BackPropagation(const DataFromNetwork& dataNN, const ErrorFuncType EType, const mat_r& target)
+vec_r BackPropagation(const DataFromNetwork& dataNN, const EFuncType EType, const mat_r& target)
 throw (InvalidParametersException) {
 
 	auto nLayers = dataNN.numLayers;
@@ -45,8 +45,8 @@ throw (InvalidParametersException) {
 		throw InvalidParametersException("[BACKPROP] the target is not compatbile with network's output.");
 
 	//	Check on loss function
-	ErrorFuncType EFuncType{ EType };
-	if (EType == ErrorFuncType::CROSSENTROPY_SOFTMAX) {
+	EFuncType EFuncType{ EType };
+	if (EType == EFuncType::CROSSENTROPY_SOFTMAX) {
 		if (dataNN.AFunctionDerivativePerLayer.back() == AFuncType::IDENTITY) 
 			PostProcessing();
 
@@ -54,16 +54,16 @@ throw (InvalidParametersException) {
 			std::cout << "[ERROR] It's not possibile to run the Post Processing step. " << std::endl;
 			std::cout << "New loss function: CROSS ENTROPY. " << std::endl;
 
-			EFuncType = ErrorFuncType::CROSSENTROPY;
+			EFuncType = EFuncType::CROSSENTROPY;
 		}
 	}
 
-	if (EType == ErrorFuncType::CROSSENTROPY) {
+	if (EType == EFuncType::CROSSENTROPY) {
 		if (dataNN.AFunctionDerivativePerLayer.back() != AFuncType::SIGMOID) {
 			std::cout << "[ERROR] It's not possibile to use CROSS ENTROPY loss. " << std::endl;
 			std::cout << "New loss function: SUM OF SQUARES. " << std::endl;
 
-			EFuncType = ErrorFuncType::SUMOFSQUARES;
+			EFuncType = EFuncType::SUMOFSQUARES;
 		}
 	}
 
@@ -71,9 +71,9 @@ throw (InvalidParametersException) {
 
 #pragma region Compute delta	
 
-	deque<vector<Real>> allDelta(nLayers);
+	deque<vec_r> allDelta(nLayers);
 
-	vector<Real> deltaOutput;
+	vec_r deltaOutput;
 	for (const auto& k : RangeGen(0, nNeuronsLayer.back()))
 		deltaOutput.push_back(ComputeDeltaOutput(k));
 	allDelta.back() = deltaOutput;
@@ -84,7 +84,7 @@ throw (InvalidParametersException) {
 	auto lastHiddenL = (nLayers - 1) - 1;
 	for (const auto& layer : RangeGen(lastHiddenL, -1)) {
 
-		vector<Real> delta_i;
+		vec_r delta_i;
 		allDelta.front() = delta_i; // delta_i is empty. 
 
 		AFuncType = AFuncLayer[layer];
@@ -109,7 +109,7 @@ throw (InvalidParametersException) {
 #pragma endregion
 
 #pragma region Compute Grad E
-	vector<Real> gradE;
+	vec_r gradE;
 
 	for (const auto& layer : RangeGen(0, nLayers)) {
 		Real dE_dparm;

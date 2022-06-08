@@ -146,7 +146,7 @@ void NeuralNetworkFF::SetAllWeights(const size_t layer, const mat_r& newWeights)
 	}
 }
 
-void NeuralNetworkFF::SetAllBiases(const size_t layer, const vector<Real>& newBias) throw (InvalidParametersException) {
+void NeuralNetworkFF::SetAllBiases(const size_t layer, const vec_r& newBias) throw (InvalidParametersException) {
 	if (layer >= _numLayers)
 		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
 
@@ -198,7 +198,7 @@ void NeuralNetworkFF::SetAllParam_PerLayer(const size_t layer, const mat_r& newM
 	}
 }
 
-NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) throw (InvalidParametersException) {
+NetworkResult NeuralNetworkFF::ComputeNetwork(const vec_r& input) throw (InvalidParametersException) {
 
 	NetworkResult netResult;
 
@@ -207,7 +207,7 @@ NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) throw (
 		throw InvalidParametersException("[NNFF] input's dimension must be compatible with the network.");
 
 	mat_r activation;
-	vector<Real> input_with_bias;
+	vec_r input_with_bias;
 	input_with_bias.push_back(1); // First element is 1, because we have to consider also bias dimension
 
 	for (const auto& i : input)

@@ -20,7 +20,7 @@ struct DataFromNetwork {
 	const vector<mat_r>  weightsPerLayer;
 	const vector<AFuncType> AFunctionDerivativePerLayer;
 	const vector<mat_r>  neuronsOutputPerLayer;
-	const vector<Real>	NNinput;
+	const vec_r	NNinput;
 };
 
 /**
@@ -31,4 +31,4 @@ struct DataFromNetwork {
  * \param	EFuncType is the type of the error function.
  * \return	A vector of delta values.
  */
-vector<Real> BackPropagation(const DataFromNetwork& dataNN, const ErrorFuncType EFuncType, const mat_r& target);
+vec_r BackPropagation(const DataFromNetwork& dataNN, const EFuncType EType, const mat_r& target);

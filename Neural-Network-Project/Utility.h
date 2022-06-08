@@ -23,6 +23,11 @@ typedef float Real;
 typedef matrix<Real> mat_r;
 
 /**
+	Row vector of real type.
+ */
+typedef vector<Real> vec_r;
+
+/**
  *	Range generator.
  * 
  * \param	first is the first element of the range.

@@ -7,8 +7,8 @@
 
 using std::vector;
 
-bool Test_GradientChecking (const NeuralNetworkFF& NN, const vector<Real>& gradToTest, 
-	const ErrorFuncType EFuncType, const vector<Real>& input, const mat_r& target);
+bool Test_GradientChecking (const NeuralNetworkFF& NN, const vec_r& gradToTest, 
+	const EFuncType EType, const vec_r& input, const mat_r& target);
 
 
 

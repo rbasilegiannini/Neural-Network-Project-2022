@@ -345,9 +345,9 @@ for (const auto& nTest : RangeGen(1, 21)) {
 	Hyperparameters newHyp({ input.size(), nNeuronsPerLayer, AFuncPerLayer });
 	nnManager.ResetHyperparameters(newHyp);
 
-	ErrorFuncType EFuncType;
+	EFuncType EFuncType;
 	size_t choice{ (size_t)(rand() % 3) };
-	EFuncType = ErrorFuncType::CROSSENTROPY_SOFTMAX;
+	EFuncType = EFuncType::CROSSENTROPY_SOFTMAX;
 	nnManager.SetAFunc_PerLayer(nnManager.GetNumLayers() - 1, AFuncType::IDENTITY);
 
 	vector<Real> gradE;

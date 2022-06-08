@@ -1,14 +1,14 @@
 #include "TestFunction.h"
 
-bool Test_GradientChecking(const NeuralNetworkFF& NN, const vector<Real>& gradToTest, 
-	const ErrorFuncType EFuncType, const vector<Real>& input, const mat_r& target) {
+bool Test_GradientChecking(const NeuralNetworkFF& NN, const vec_r& gradToTest,
+	const EFuncType EFuncType, const vec_r& input, const mat_r& target) {
 
 	bool successful{ false };
 
 	//	Gradient checking
 	auto net = NN;
 
-	vector<Real> gradE_checking;
+	vec_r gradE_checking;
 	vector<mat_r> allParamsPerLayer;
 
 	Real e = 0.0001;
