@@ -2,8 +2,11 @@
 
 #include <vector>
 #include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/matrix_proxy.hpp>
 
+using boost::numeric::ublas::prod;
 using boost::numeric::ublas::matrix;
+
 using std::vector;
 
 /**
@@ -61,4 +64,19 @@ inline Real SoftMax(const mat_r& outputs, const size_t idxOutput) {
 	Real SM = exp(outputs(idxOutput, 0)) / summation;
 
  	return SM;
+}
+
+inline Real row_by_column (const mat_r& row, const mat_r& column) {
+
+	auto result = prod(row, column);
+	return result(0, 0);
+}
+
+inline mat_r extract_column(const mat_r& mat, const size_t col) {
+
+	mat_r extractor(mat.size1(), 1);
+	for (const auto& i : RangeGen(0, mat.size1()))
+		extractor(i, 0) = mat(i, col);
+
+	return extractor;
 }

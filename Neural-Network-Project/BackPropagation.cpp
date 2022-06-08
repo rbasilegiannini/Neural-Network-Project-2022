@@ -1,6 +1,14 @@
 #include "BackPropagation.h"
 #include <deque>
 
+
+// TEST
+#include <boost/numeric/ublas/io.hpp>
+#include <boost/numeric/ublas/matrix_proxy.hpp>
+using boost::numeric::ublas::matrix_row;
+using boost::numeric::ublas::column;
+
+//
 using std::deque;
 
 vec_r BackPropagation(const DataFromNetwork& dataNN, const EFuncType EType, const mat_r& target)
@@ -71,12 +79,12 @@ throw (InvalidParametersException) {
 
 #pragma region Compute delta	
 
-	deque<vec_r> allDelta(nLayers);
+	vector<mat_r> allDelta_row(nLayers);
 
-	vec_r deltaOutput;
-	for (const auto& k : RangeGen(0, nNeuronsLayer.back()))
-		deltaOutput.push_back(ComputeDeltaOutput(k));
-	allDelta.back() = deltaOutput;
+	mat_r deltaOut_row(1, nNeuronsLayer.back());
+	for (const auto& k : RangeGen(0, nNeuronsLayer.back())) 
+		deltaOut_row(0, k) = ComputeDeltaOutput(k);
+	allDelta_row.back() = deltaOut_row;
 
 	//	Internal delta
 
@@ -84,9 +92,8 @@ throw (InvalidParametersException) {
 	auto lastHiddenL = (nLayers - 1) - 1;
 	for (const auto& layer : RangeGen(lastHiddenL, -1)) {
 
-		vec_r delta_i;
-		allDelta.front() = delta_i; // delta_i is empty. 
-
+		mat_r delta_i_row(1, nNeuronsLayer[layer]);
+		allDelta_row.front() = delta_i_row;
 		AFuncType = AFuncLayer[layer];
 
 		//	For all neurons of the layer i
@@ -96,14 +103,11 @@ throw (InvalidParametersException) {
 			auto AFuncDer_i = ActivationFunction::AFunction_Der[AFuncType];
 
 			//	Compute the summation, for all the neurons of the next layer
-			Real summation{ 0 };
-			for (const auto& forwardConn : RangeGen(0, nNeuronsLayer[layer + 1]))
-				summation += weightsLayer[layer + 1](forwardConn, neuron) * allDelta[layer + 1][forwardConn];
+			Real summation = row_by_column(allDelta_row[layer+1], extract_column(weightsLayer[layer + 1], neuron));
 
-			delta_i.push_back(AFuncDer_i(a_i) * summation);
+			delta_i_row(0, neuron) = AFuncDer_i(a_i) * summation;
 		}
-
-		allDelta[layer] = delta_i;	//	Now delta_i is filled.
+		allDelta_row[layer] = delta_i_row;
 	}
 
 #pragma endregion
@@ -117,16 +121,17 @@ throw (InvalidParametersException) {
 		for (const auto& neuron : RangeGen(0, nNeuronsLayer[layer])) {
 
 			//	Compute dE_dparm: biases
-			dE_dparm = allDelta[layer][neuron] * 1;
+			dE_dparm = allDelta_row[layer](0, neuron);// * 1
+
 			gradE.push_back(dE_dparm);
 
 			//	Compute dE_dparm: weights
 			for (const auto& conn : RangeGen(0, weightsLayer[layer].size2())) {
 
 				if (layer == 0)
-					dE_dparm = allDelta[layer][neuron] * input[conn];
+					dE_dparm = allDelta_row[layer](0, neuron) * input[conn];
 				else
-					dE_dparm = allDelta[layer][neuron] * outputsLayer[layer - 1](conn, 0);
+					dE_dparm = allDelta_row[layer](0, neuron) * outputsLayer[layer - 1](conn, 0);
 
 				gradE.push_back(dE_dparm);
 			}
