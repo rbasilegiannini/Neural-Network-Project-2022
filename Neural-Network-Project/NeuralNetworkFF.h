@@ -14,8 +14,8 @@ using boost::numeric::ublas::matrix;
 	- the neurons' activation (a column vector for each layer)
  */
 struct NetworkResult {
-	vector<matrix<Real>> neuronsOutputPerLayer;
-	vector<matrix<Real>> activationsPerLayer;
+	vector<mat_r> neuronsOutputPerLayer;
+	vector<mat_r> activationsPerLayer;
 };
 
 /**
@@ -42,16 +42,16 @@ public:
 	size_t GetNumLayers()	{ return _numLayers; }
 	size_t GetInputDimension()	{ return _inputDimension; }
 	size_t GetNumNeurons_PerLayer(const size_t layer)	throw (InvalidParametersException);
-	matrix<Real> GetWeights_PerLayer(const size_t layer)	throw (InvalidParametersException);
-	matrix<Real> GetBias_PerLayer(const size_t layer)	throw (InvalidParametersException); 
-	matrix<Real> GetAllParam_PerLayer(const size_t layer)	throw (InvalidParametersException);
+	mat_r GetWeights_PerLayer(const size_t layer)	throw (InvalidParametersException);
+	mat_r GetBias_PerLayer(const size_t layer)	throw (InvalidParametersException);
+	mat_r GetAllParam_PerLayer(const size_t layer)	throw (InvalidParametersException);
 	AFuncType GetAFunc_PerLayer(const size_t layer)	throw (InvalidParametersException); 
 
 	void SetParam_PerNeuron(const size_t layer, const size_t neuron,const size_t conn, const Real newParam)	
 		throw (InvalidParametersException);
-	void SetAllParam_PerLayer(const size_t layer, const matrix<Real>& newMat)	throw (InvalidParametersException);
+	void SetAllParam_PerLayer(const size_t layer, const mat_r& newMat)	throw (InvalidParametersException);
 	void SetAFunc_PerLayer(const size_t layer, const AFuncType AFuncType)	throw (InvalidParametersException);
-	void SetAllWeights(const size_t layer, const matrix<Real>& newWeights)	throw (InvalidParametersException);
+	void SetAllWeights(const size_t layer, const mat_r& newWeights)	throw (InvalidParametersException);
 	void SetAllBiases(const size_t layer, const vector<Real>& newBias)	throw (InvalidParametersException);
 
 	/**
@@ -85,8 +85,8 @@ private:
 	size_t _numLayers;
 	size_t _inputDimension;
 	vector<size_t> _numNeurons_PerLayer;   
-	vector<matrix<Real>> _weights_PerLayer;
-	vector<matrix<Real>> _bias_PerLayer;
+	vector<mat_r> _weights_PerLayer;
+	vector<mat_r> _bias_PerLayer;
 	vector<AFuncType> _activationFunction_PerLayer;
 
 	void _randomInit(const size_t layer, const int l_ext, const int r_ext) throw (InvalidParametersException);

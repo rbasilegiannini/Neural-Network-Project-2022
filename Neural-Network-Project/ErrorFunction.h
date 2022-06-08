@@ -33,15 +33,15 @@ class ErrorFunction {
 public:
 	ErrorFunction() = delete;
 
-	static map <ErrorFuncType, function<Real(const matrix<Real>& , const matrix<Real>&)>> EFunction;
+	static map <ErrorFuncType, function<Real(const mat_r& , const mat_r&)>> EFunction;
 	static map <ErrorFuncType, function<Real(const Real, const Real)>> EFunctionDer_RespectOutput;
 
 private:
-	static Real _sumOfSquares(const matrix<Real>& NNOutput, const matrix<Real>& targets);
+	static Real _sumOfSquares(const mat_r& NNOutput, const mat_r& target);
 	static Real _sumOfSquaresDer(const Real neuronOutput, const Real target);
 
-	static Real _crossEntropy(const matrix<Real>& NNOutput, const matrix<Real>& targets);
-	static Real _crossEntropy_softMax(const matrix<Real>& NNOutput, const matrix<Real>& targets);
+	static Real _crossEntropy(const mat_r& NNOutput, const mat_r& target);
+	static Real _crossEntropy_softMax(const mat_r& NNOutput, const mat_r& target);
 	static Real _crossEntropyDer(const Real neuronOutput, const Real target);
 	static Real _crossEntropyDer_softMax(const Real neuronOutput, const Real target);
 

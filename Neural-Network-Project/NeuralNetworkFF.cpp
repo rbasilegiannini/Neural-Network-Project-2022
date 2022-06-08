@@ -40,14 +40,14 @@ size_t NeuralNetworkFF::GetNumNeurons_PerLayer(const size_t layer) throw(Invalid
 	return _numNeurons_PerLayer[layer];
 }
 
-matrix<Real> NeuralNetworkFF::GetWeights_PerLayer(const size_t layer) throw(InvalidParametersException){
+mat_r NeuralNetworkFF::GetWeights_PerLayer(const size_t layer) throw(InvalidParametersException){
 	if (layer >= _numLayers)
 		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
 
 	return _weights_PerLayer[layer];
 }
 
-matrix<Real> NeuralNetworkFF::GetBias_PerLayer(const size_t layer) throw(InvalidParametersException) {
+mat_r NeuralNetworkFF::GetBias_PerLayer(const size_t layer) throw(InvalidParametersException) {
 	if (layer >= _numLayers)
 		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
 
@@ -61,14 +61,14 @@ AFuncType NeuralNetworkFF::GetAFunc_PerLayer(const size_t layer) throw(InvalidPa
 	return _activationFunction_PerLayer[layer];
 }
 
-matrix<Real> NeuralNetworkFF::GetAllParam_PerLayer(const size_t layer) throw (InvalidParametersException) {
+mat_r NeuralNetworkFF::GetAllParam_PerLayer(const size_t layer) throw (InvalidParametersException) {
 	if (layer >= _numLayers)
 		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
 
 	// Set allParams matrices
 	size_t numNeurons = _numNeurons_PerLayer[layer];		// All neurons
 	size_t numParams = _weights_PerLayer[layer].size2() + 1;	// All weights + bias
-	matrix<Real> params(numNeurons, numParams);
+	mat_r params(numNeurons, numParams);
 
 	//	First columns ~> biases
 	for (const auto& i : RangeGen(0, params.size1()))
@@ -89,7 +89,7 @@ void NeuralNetworkFF::SetAFunc_PerLayer(const size_t layer, const AFuncType AFun
 	_activationFunction_PerLayer[layer] = AFunctionType;
 }
 
-void NeuralNetworkFF::SetAllWeights(const size_t layer, const matrix<Real>& newWeights) throw (InvalidParametersException) {
+void NeuralNetworkFF::SetAllWeights(const size_t layer, const mat_r& newWeights) throw (InvalidParametersException) {
 	if (layer >= _numLayers)
 		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
 
@@ -182,7 +182,7 @@ throw (InvalidParametersException) {
 
 }
 
-void NeuralNetworkFF::SetAllParam_PerLayer(const size_t layer, const matrix<Real>& newMat) throw(InvalidParametersException) {
+void NeuralNetworkFF::SetAllParam_PerLayer(const size_t layer, const mat_r& newMat) throw(InvalidParametersException) {
 	if (layer >= _numLayers)
 		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
 	if (_numNeurons_PerLayer[layer] != newMat.size1())
@@ -206,14 +206,14 @@ NetworkResult NeuralNetworkFF::ComputeNetwork(const vector<Real>& input) throw (
 	if (input.size() != _inputDimension) 
 		throw InvalidParametersException("[NNFF] input's dimension must be compatible with the network.");
 
-	matrix<Real> activation;
+	mat_r activation;
 	vector<Real> input_with_bias;
 	input_with_bias.push_back(1); // First element is 1, because we have to consider also bias dimension
 
 	for (const auto& i : input)
 		input_with_bias.push_back(i);
 
-	matrix<Real> outputLayer(input_with_bias.size(), 1);	// It's a column vector
+	mat_r outputLayer(input_with_bias.size(), 1);	// It's a column vector
 
 	//	OutputLayer initialization
 	for (const auto& i : RangeGen(0, input_with_bias.size()))

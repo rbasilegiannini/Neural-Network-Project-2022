@@ -81,7 +81,7 @@ public:
 	 * \param layer
 	 * \param newMat
 	 */
-	void SetAllParam_PerLayer(const size_t layer, const matrix<Real>& newMat);
+	void SetAllParam_PerLayer(const size_t layer, const mat_r& newMat);
 
 	/**
 	 *	This setter sets the activation functions for a given layer.

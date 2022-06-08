@@ -17,7 +17,7 @@ void NeuralNetworkManager::Run(const vector<Real>& input) {
 	}
 }
 
-vector<Real> NeuralNetworkManager::ComputeGradE_PerSample(const ErrorFuncType EFuncType, const vector<Real>& targets) 
+vector<Real> NeuralNetworkManager::ComputeGradE_PerSample(const ErrorFuncType EFuncType, const vector<Real>& target) 
 throw (InvalidParametersException) {
 	if (_netResult.activationsPerLayer.empty())
 		throw InvalidParametersException("[MANAGER] it's mandatory to perform a forward propagation step first.");
@@ -27,7 +27,7 @@ throw (InvalidParametersException) {
 	//	Fill DataFromNetwork structure
 	vector<size_t> allNeuronsNumber;
 	vector<AFuncType> allAFunc;
-	vector<matrix<Real>> weightsPerLayer;
+	vector<mat_r> weightsPerLayer;
 
 	for (const auto& layer : RangeGen(0, _neuralNetwork.GetNumLayers())) {
 		allNeuronsNumber.push_back(_neuralNetwork.GetNumNeurons_PerLayer(layer));
@@ -46,9 +46,9 @@ throw (InvalidParametersException) {
 	};
 
 	//	Convert targets' vector to matrix
-	matrix<Real> matTarget (targets.size(), 1);
-	for (const auto& k : RangeGen(0, targets.size()))
-		matTarget(k, 0) = targets[k];
+	mat_r matTarget (target.size(), 1);
+	for (const auto& k : RangeGen(0, target.size()))
+		matTarget(k, 0) = target[k];
 	
 	try {
 		gradE = BackPropagation(dataNN, EFuncType, matTarget);
@@ -60,7 +60,7 @@ throw (InvalidParametersException) {
 	return gradE;
 }
 
-void NeuralNetworkManager::SetAllParam_PerLayer(const size_t layer, const matrix<Real>& newMat) {
+void NeuralNetworkManager::SetAllParam_PerLayer(const size_t layer, const mat_r& newMat) {
 	try {
 		_neuralNetwork.SetAllParam_PerLayer(layer, newMat);
 	}

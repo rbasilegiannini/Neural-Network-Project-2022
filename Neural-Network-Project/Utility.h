@@ -18,6 +18,11 @@ using std::vector;
 typedef float Real;
 
 /**
+	Matrix of real type.
+ */
+typedef matrix<Real> mat_r;
+
+/**
  *	Range generator.
  * 
  * \param	first is the first element of the range.
@@ -43,7 +48,7 @@ inline vector<int> RangeGen(const int first, const int last) {
 	return range;
 }
 
-inline Real SoftMax(const matrix<Real>& outputs, const size_t idxOutput) {
+inline Real SoftMax(const mat_r& outputs, const size_t idxOutput) {
 
 	Real summation{ 0 };
 	for (const auto& h : RangeGen(0, outputs.size1())) 

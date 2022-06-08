@@ -3,7 +3,7 @@
 
 using std::deque;
 
-vector<Real> BackPropagation(const DataFromNetwork& dataNN, const ErrorFuncType EType, const matrix<Real>& target) 
+vector<Real> BackPropagation(const DataFromNetwork& dataNN, const ErrorFuncType EType, const mat_r& target)
 throw (InvalidParametersException) {
 
 	auto nLayers = dataNN.numLayers;
@@ -17,7 +17,7 @@ throw (InvalidParametersException) {
 #pragma region Tools
 
 	auto PostProcessing = [&]() {
-		matrix<Real> outputs(nNeuronsLayer.back(), 1);
+		mat_r outputs(nNeuronsLayer.back(), 1);
 
 		for (const auto& k : RangeGen(0, nNeuronsLayer.back())) {
 			outputs(k, 0) = SoftMax(outputsLayer.back(), k);

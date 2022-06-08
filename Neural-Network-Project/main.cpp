@@ -206,7 +206,7 @@ int main() {
 
 #pragma region Test Gradient computation
 
-/**/
+/**
 Hyperparameters hyp({});
 NeuralNetworkManager& nnManager = NeuralNetworkManager::GetNNManager(hyp);
 
@@ -306,5 +306,87 @@ NeuralNetworkManager& nnManager = NeuralNetworkManager::GetNNManager(hyp);
 	}
 /**/
 #pragma endregion
+
+#pragma region Timing Gradient computation
+
+Hyperparameters hyp({});
+NeuralNetworkManager& nnManager = NeuralNetworkManager::GetNNManager(hyp);
+
+
+for (const auto& nTest : RangeGen(1, 21)) {
+
+	vector<size_t> nNeuronsPerLayer;
+	vector<Real> input;
+	matrix<Real> target;
+
+	// Set nNeuronPerLayer
+	nNeuronsPerLayer.resize(3 * nTest);
+
+	for (auto& nNeuron : nNeuronsPerLayer)
+		nNeuron = 10;
+
+	// Set target
+	target.resize(nNeuronsPerLayer.back(), 1);
+
+	for (const auto& t : RangeGen(0, target.size1()))
+		target(t, 0) = 0;
+
+	target(rand() % target.size1(), 0) = 1;
+
+	// Set input 
+	input.resize(10);
+
+	for (auto& i : input)
+		i = (Real)(((rand() % 21) - 10) * 0.1);	// Random value in [-1, 1]
+
+	// Create the NN
+	vector<AFuncType> AFuncPerLayer(nNeuronsPerLayer.size(), AFuncType::SIGMOID);
+
+	Hyperparameters newHyp({ input.size(), nNeuronsPerLayer, AFuncPerLayer });
+	nnManager.ResetHyperparameters(newHyp);
+
+	ErrorFuncType EFuncType;
+	size_t choice{ (size_t)(rand() % 3) };
+	EFuncType = ErrorFuncType::CROSSENTROPY_SOFTMAX;
+	nnManager.SetAFunc_PerLayer(nnManager.GetNumLayers() - 1, AFuncType::IDENTITY);
+
+	vector<Real> gradE;
+	
+	vector<Real> targetVec(nNeuronsPerLayer.back());
+	for (const auto& t : RangeGen(0, target.size1()))
+		targetVec[t] = target(t, 0);
+
+	nnManager.Run(input);
+	auto start_bp = high_resolution_clock::now();
+	try {
+		gradE = nnManager.ComputeGradE_PerSample(EFuncType, targetVec);
+	}
+	catch (InvalidParametersException e) {
+		std::cout << e.getErrorMessage() << std::endl;
+		return -1;
+	}
+	auto stop_bp = high_resolution_clock::now();
+
+	auto duration_bp = duration_cast<microseconds>(stop_bp - start_bp);
+
+
+		//	Testing & compare
+/*	auto nn = nnManager.getNet();
+	auto start_chk = high_resolution_clock::now();
+	bool test = Test_GradientChecking(nn, gradE, EFuncType, input, target);
+	auto stop_chk = high_resolution_clock::now();
+
+	auto duration_chk = duration_cast<milliseconds>(stop_chk - start_chk);
+*/
+	size_t sumOfParams{ 0 };
+	for (const auto& layer : RangeGen(0, nnManager.GetNumLayers()))
+		sumOfParams += nnManager.GetAllParam_PerLayer(layer).size1() * nnManager.GetAllParam_PerLayer(layer).size2();
+
+	cout << "Test number: " << nTest << ". Number of params: " << sumOfParams << ", time: " << duration_bp.count() << endl;
+
+}
+
+#pragma endregion
+
 
 } 

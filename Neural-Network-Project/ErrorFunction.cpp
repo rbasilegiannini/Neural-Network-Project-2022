@@ -2,15 +2,15 @@
 #include "Utility.h" 
 #include <iostream>
 
-map<ErrorFuncType, function<Real(const matrix<Real>&, const matrix<Real>&)>> ErrorFunction::EFunction = {
+map<ErrorFuncType, function<Real(const mat_r&, const mat_r&)>> ErrorFunction::EFunction = {
 
-    { ErrorFuncType::SUMOFSQUARES, [](const matrix<Real>& output, const matrix<Real>& target) {
+    { ErrorFuncType::SUMOFSQUARES, [](const mat_r& output, const mat_r& target) {
         return _sumOfSquares(output, target); }},
 
-	{ ErrorFuncType::CROSSENTROPY, [](const matrix<Real>& output, const matrix<Real>& target) {
+	{ ErrorFuncType::CROSSENTROPY, [](const mat_r& output, const mat_r& target) {
 		return _crossEntropy(output, target); }},
 
-	{ ErrorFuncType::CROSSENTROPY_SOFTMAX, [](const matrix<Real>& output, const matrix<Real>& target) {
+	{ ErrorFuncType::CROSSENTROPY_SOFTMAX, [](const mat_r& output, const mat_r& target) {
 		return _crossEntropy_softMax(output, target); }}
 };
 
@@ -51,7 +51,7 @@ string NameOfErrorFuncType(const ErrorFuncType type) {
 	return name;
 }
 
-Real ErrorFunction::_sumOfSquares(const matrix<Real>& NNOutput, const matrix<Real>& targets) {
+Real ErrorFunction::_sumOfSquares(const mat_r& NNOutput, const mat_r& targets) {
 
 	// Check to avoid out of range. TODO: use exception 
 	if (targets.size1() != NNOutput.size1()) {
@@ -70,7 +70,7 @@ Real ErrorFunction::_sumOfSquaresDer(const Real neuronOutput, const Real target)
 	return (neuronOutput - target);
 }
 
-Real ErrorFunction::_crossEntropy(const matrix<Real>& NNOutput, const matrix<Real>& targets) {
+Real ErrorFunction::_crossEntropy(const mat_r& NNOutput, const mat_r& targets) {
 
 	//	Check to avoid out of range. TODO: use exception 
 	if (targets.size1() != NNOutput.size1()) {
@@ -94,7 +94,7 @@ Real ErrorFunction::_crossEntropy(const matrix<Real>& NNOutput, const matrix<Rea
 	return loss;
 }
 
-Real ErrorFunction::_crossEntropy_softMax(const matrix<Real>& NNOutput, const matrix<Real>& targets) {
+Real ErrorFunction::_crossEntropy_softMax(const mat_r& NNOutput, const mat_r& targets) {
 	//	Check to avoid out of range. TODO: use exception 
 	if (targets.size1() != NNOutput.size1()) {
 		std::cout << "[ERROR] output is not compatible with targets." << std::endl;
