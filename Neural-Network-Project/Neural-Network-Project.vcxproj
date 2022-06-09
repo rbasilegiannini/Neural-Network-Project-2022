@@ -146,6 +146,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NeuralNetworkFF.cpp" />
     <ClCompile Include="NeuralNetworkManager.cpp" />
+    <ClCompile Include="ReadMNIST.cpp" />
     <ClCompile Include="TestFunction.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -155,6 +156,7 @@
     <ClInclude Include="InvalidParametersException.h" />
     <ClInclude Include="NeuralNetworkFF.h" />
     <ClInclude Include="NeuralNetworkManager.h" />
+    <ClInclude Include="ReadMNIST.h" />
     <ClInclude Include="TestFunction.h" />
     <ClInclude Include="Utility.h" />
   </ItemGroup>

@@ -206,7 +206,7 @@ int main() {
 
 #pragma region Test Gradient computation
 
-	/**/
+	/**
 	Hyperparameters hyp({});
 	NeuralNetworkManager& nnManager = NeuralNetworkManager::GetNNManager(hyp);
 
@@ -423,6 +423,15 @@ int main() {
 		/**/
 #pragma endregion
 
+#pragma region TestMNIST
+
+int magicNumber = 16777216;
+
+cout << ReverseInt(magicNumber) << endl;
+
+
+#pragma endregion
 
 	
 }
+
