@@ -1,15 +1,4 @@
 #include "BackPropagation.h"
-#include <deque>
-
-
-// TEST
-#include <boost/numeric/ublas/io.hpp>
-#include <boost/numeric/ublas/matrix_proxy.hpp>
-using boost::numeric::ublas::matrix_row;
-using boost::numeric::ublas::column;
-
-//
-using std::deque;
 
 vec_r BackPropagation(const DataFromNetwork& dataNN, const EFuncType EType, const mat_r& target)
 throw (InvalidParametersException) {

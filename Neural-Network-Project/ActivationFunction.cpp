@@ -1,6 +1,5 @@
 #include "ActivationFunction.h"
 #include <cmath>
-#include "Utility.h"
 
 string NameOfAFuncType(const AFuncType type) {
 

@@ -2,7 +2,6 @@
 
 #include "NeuralNetworkFF.h"
 #include "ErrorFunction.h"
-#include "InvalidParametersException.h"
 
 /**
 	This data structure contains the hyperparameters of th network:
@@ -93,8 +92,8 @@ public:
 	
 	void PrintNetwork() { _neuralNetwork.PrintNetwork(); }
 
-	///DEBUG FUNCTION
-	NeuralNetworkFF getNet() { return _neuralNetwork; }
+	//	Debug function
+	//NeuralNetworkFF getNet() { return _neuralNetwork; }
 private:
 	//	Singleton
 	NeuralNetworkManager() = default;

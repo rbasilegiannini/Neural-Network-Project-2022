@@ -1,12 +1,10 @@
 #pragma once
 
-#include <vector>
 #include <map>
 #include <functional>
 #include <string>
 #include "Utility.h"
 
-using std::vector;
 using std::map;
 using std::function;
 using std::string;

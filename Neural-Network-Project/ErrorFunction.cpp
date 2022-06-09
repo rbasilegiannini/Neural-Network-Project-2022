@@ -1,6 +1,4 @@
 #include "ErrorFunction.h"
-#include "Utility.h" 
-#include <iostream>
 
 map<EFuncType, function<Real(const mat_r&, const mat_r&)>> ErrorFunction::EFunction = {
 

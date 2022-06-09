@@ -6,7 +6,6 @@
 
 using boost::numeric::ublas::prod;
 using boost::numeric::ublas::matrix;
-
 using std::vector;
 
 /**
@@ -26,7 +25,7 @@ typedef float Real;
 typedef matrix<Real> mat_r;
 
 /**
-	Row vector of real type.
+	Vector of real type.
  */
 typedef vector<Real> vec_r;
 

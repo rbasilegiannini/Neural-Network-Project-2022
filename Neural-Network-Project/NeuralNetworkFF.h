@@ -1,12 +1,7 @@
 #pragma once
-#include <vector>
-#include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include "ActivationFunction.h"
 #include "InvalidParametersException.h"
-
-using std::vector;
-using boost::numeric::ublas::matrix;
 
 /**
  	This data structure contains the result of the network computation:
