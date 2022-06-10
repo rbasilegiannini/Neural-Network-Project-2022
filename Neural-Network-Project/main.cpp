@@ -7,6 +7,7 @@
 #include "BackPropagation.h"
 #include "TestFunction.h"
 #include "NeuralNetworkManager.h"
+#include "ReadMNIST.h"
 
 #include <vector>
 #include <boost/numeric/ublas/matrix.hpp>
@@ -424,14 +425,30 @@ int main() {
 #pragma endregion
 
 #pragma region TestMNIST
+string imagesFiles = "C:\\Users\\RBG94\\Desktop\\Progetto reti\\train-images.idx3-ubyte";
+string labelsFile = "C:\\Users\\RBG94\\Desktop\\Progetto reti\\train-labels.idx1-ubyte";
 
-int magicNumber = 16777216;
+auto samples = ReadSample(imagesFiles, labelsFile, 10000);
+/*
+for (const auto& sample : samples) {
 
-cout << ReverseInt(magicNumber) << endl;
-
+	cout << "IMAGE: " << endl << endl;
+	for (const auto& row : RangeGen(0, sample.image.size1())) {
+		for (const auto& col : RangeGen(0, sample.image.size2())) {
+			int temp = sample.image(row, col);
+			if (temp > 0)
+				cout << 1;
+			else
+				cout << " ";
+		}
+		cout << endl;
+	}
+	cout << endl << "LABEL: " << (unsigned)sample.label << endl << endl;
+}
+*/
+cout << endl;
 
 #pragma endregion
 
-	
 }
 
