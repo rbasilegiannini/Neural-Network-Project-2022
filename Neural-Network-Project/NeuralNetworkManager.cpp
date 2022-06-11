@@ -92,6 +92,20 @@ mat_r NeuralNetworkManager::GetAllParam_PerLayer(const size_t layer) {
 	}
 }
 
+vector<size_t> NeuralNetworkManager::GetAllNumNeurons() {
+	vector<size_t> AllNumNeurons;
+	for (const auto& layer : RangeGen(0, GetNumLayers()))
+		AllNumNeurons.push_back(_neuralNetwork.GetNumNeurons_PerLayer(layer));
+	return AllNumNeurons;
+}
+
+vector<AFuncType> NeuralNetworkManager::GetAllAFuncType() {
+	vector<AFuncType> AllFuncType;
+	for (const auto& layer : RangeGen(0, GetNumLayers()))
+		AllFuncType.push_back(_neuralNetwork.GetAFunc_PerLayer(layer));
+	return AllFuncType;
+}
+
 void NeuralNetworkManager::RandomInitialization(const int l_ext, const int r_ext) {
 	_neuralNetwork.RandomInitialization(l_ext, r_ext);
 }

@@ -73,6 +73,9 @@ public:
 	mat_r GetAllParam_PerLayer(const size_t layer);
 
 	size_t GetNumLayers() { return _neuralNetwork.GetNumLayers(); }
+	mat_r GetNetworkOutput() { return _netResult.neuronsOutputPerLayer.back(); }
+	vector<size_t> GetAllNumNeurons();
+	vector<AFuncType> GetAllAFuncType();
 
 	/**
 	 *	This setter sets the matrix of parameteres for a given layer.
@@ -93,7 +96,7 @@ public:
 	void PrintNetwork() { _neuralNetwork.PrintNetwork(); }
 
 	//	Debug function
-	//NeuralNetworkFF getNet() { return _neuralNetwork; }
+	NeuralNetworkFF getNet() { return _neuralNetwork; }
 private:
 	//	Singleton
 	NeuralNetworkManager() = default;
