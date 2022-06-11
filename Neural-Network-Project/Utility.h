@@ -79,3 +79,10 @@ inline mat_r extract_column(const mat_r& mat, const size_t col) {
 
 	return extractor;
 }
+
+template <typename T>
+vector<T>& operator+=(vector<T>& vec1, const vector<T>& vec2) {
+	for (const auto& i : RangeGen(0, vec1.size()))
+		vec1[i] = vec1[i] + vec2[i];
+	return vec1;
+}

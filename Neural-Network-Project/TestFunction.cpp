@@ -281,23 +281,19 @@ void TestCase_TimingGradientComputation() {
 		size_t sumOfParams{ 0 };
 		for (const auto& layer : RangeGen(0, nnManager.GetNumLayers()))
 			sumOfParams += nnManager.GetAllParam_PerLayer(layer).size1() * nnManager.GetAllParam_PerLayer(layer).size2();
-		
-			nnManager.Run(input);
-			auto start_bp = high_resolution_clock::now();
-			try {
-				gradE = nnManager.ComputeGradE_PerSample(EFuncType, targetVec);
-			}
-			catch (InvalidParametersException e) {
-				std::cout << e.getErrorMessage() << std::endl;
-				return;
-			}
-			auto stop_bp = high_resolution_clock::now();
 
-			auto duration_bp = duration_cast<microseconds>(stop_bp - start_bp);
+		nnManager.Run(input);
+		auto start_bp = high_resolution_clock::now();
+		try {
+			gradE = nnManager.ComputeGradE_PerSample(EFuncType, targetVec);
+		}
+		catch (InvalidParametersException e) {
+			cout << e.getErrorMessage() << endl;
+			return;
+		}
+		auto stop_bp = high_resolution_clock::now();
+		auto duration_bp = duration_cast<microseconds>(stop_bp - start_bp);
 
-		
-			cout << "Test number: " << nTest << ". Number of params: " << sumOfParams << ", time: " << duration_bp.count() << "us" << endl;
-
+		cout << "Test number: " << nTest << ". Number of params: " << sumOfParams << ", time: " << duration_bp.count() << "us" << endl;
 	}
-		
 }
