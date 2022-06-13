@@ -149,7 +149,6 @@
     <ClCompile Include="ReadMNIST.cpp" />
     <ClCompile Include="RPROP.cpp" />
     <ClCompile Include="TestFunction.cpp" />
-    <ClCompile Include="UpdateRule.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ActivationFunction.h" />
@@ -161,7 +160,6 @@
     <ClInclude Include="ReadMNIST.h" />
     <ClInclude Include="RPROP.h" />
     <ClInclude Include="TestFunction.h" />
-    <ClInclude Include="UpdateRule.h" />
     <ClInclude Include="Utility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
