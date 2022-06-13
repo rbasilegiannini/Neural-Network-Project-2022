@@ -45,6 +45,12 @@
     <ClCompile Include="ReadMNIST.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UpdateRule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RPROP.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ActivationFunction.h">
@@ -72,6 +78,12 @@
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="ReadMNIST.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UpdateRule.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RPROP.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

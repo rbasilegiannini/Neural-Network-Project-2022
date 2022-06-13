@@ -81,8 +81,21 @@ inline mat_r extract_column(const mat_r& mat, const size_t col) {
 }
 
 template <typename T>
+vector<T> ConvertMatToArray(const matrix<T>& mat) {
+	vector<T> arr;
+	for (const auto& row : RangeGen(0, mat.size1()))
+		for (const auto& col : RangeGen(0, mat.size2()))
+			arr.push_back(mat(row, col));
+	return arr;
+}
+
+template <typename T>
 vector<T>& operator+=(vector<T>& vec1, const vector<T>& vec2) {
 	for (const auto& i : RangeGen(0, vec1.size()))
 		vec1[i] = vec1[i] + vec2[i];
 	return vec1;
+}
+
+template <typename T> int sgn(T val) {
+	return (T(0) < val) - (val < T(0));
 }

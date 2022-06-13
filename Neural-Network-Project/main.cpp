@@ -2,13 +2,14 @@
 //
 
 #include "TestFunction.h"
-#include "NeuralNetworkManager.h"
+#include "UpdateRule.h"
 #include "ReadMNIST.h"
 
 #include <array>
 #include <algorithm>
 #include <random>
 
+using std::fill;
 using std::default_random_engine;
 using std::random_device;
 using std::cout;
@@ -18,7 +19,7 @@ using std::uniform_int_distribution;
 
 struct Sample1D {
 	vector<Real> image1D;
-	vec_r labelOneHot{ vec_r(9, 0) };
+	vec_r labelOneHot{ vec_r(10, 0) };
 };
 
 struct NetworkConfig_Evaluated {
@@ -29,14 +30,6 @@ struct NetworkConfig_Evaluated {
 	Real error_training{ 0 };
 	Real error_validation{ 0 };
 };
-
-vector<Real> ConvertMatToArray(const mat_i& mat) {
-	vector<Real> arr;
-	for (const auto& row : RangeGen(0, mat.size1()))
-		for (const auto& col : RangeGen(0, mat.size2()))
-			arr.push_back((Real)mat(row, col));
-	return arr;
-}
 
 Real ComputeError(NeuralNetworkManager& nnManager, const vector<Sample1D>& dataset, const EFuncType& Etype) {
 
@@ -54,13 +47,13 @@ Real ComputeError(NeuralNetworkManager& nnManager, const vector<Sample1D>& datas
 }
 
 int main() { 
-/**/
-#pragma region Compose dataset
 
-	string sampleImagesFile = "C:\\Users\\RBG94\\Desktop\\Progetto reti\\train-images.idx3-ubyte";
-	string sampleLabelsFile = "C:\\Users\\RBG94\\Desktop\\Progetto reti\\train-labels.idx1-ubyte"; 
-	string testImagesFile = "C:\\Users\\RBG94\\Desktop\\Progetto reti\\t10k-images.idx3-ubyte";
-	string testLabelsFile = "C:\\Users\\RBG94\\Desktop\\Progetto reti\\t10k-labels.idx1-ubyte";
+#pragma region Compose dataset
+/**
+	string sampleImagesFile = "train-images.idx3-ubyte";
+	string sampleLabelsFile = "train-labels.idx1-ubyte"; 
+	string testImagesFile = "t10k-images.idx3-ubyte";
+	string testLabelsFile = "t10k-labels.idx1-ubyte";
 
 	random_device rd;
 	unsigned seed = rd();
@@ -75,14 +68,14 @@ int main() {
 	vector<Sample1D> trainingSet(5000);
 	for (auto& s : trainingSet) {
 		auto sample = samples[uDist_train(rng)];
-		s.image1D = ConvertMatToArray(sample.image);
+		s.image1D = ConvertMatToArray<Real>(sample.image);
 		s.labelOneHot[sample.label] = 1;
 	}
 
 	vector<Sample1D> validationSet (2500);
 	for (auto& s : validationSet) {
 		auto sample = samples[uDist_train(rng)];
-		s.image1D = ConvertMatToArray(sample.image);
+		s.image1D = ConvertMatToArray<Real>(sample.image);
 		s.labelOneHot[sample.label] = 1;
 	}
 
@@ -92,17 +85,17 @@ int main() {
 
 	vector<Sample1D> testSet(2500);
 	for (auto& s : testSet) {
-		auto sample = tests[uDist_train(rng)];
-		s.image1D = ConvertMatToArray(sample.image);
+		auto sample = tests[uDist_test(rng)];
+		s.image1D = ConvertMatToArray<Real>(sample.image);
 		s.labelOneHot[sample.label] = 1;
 	}
-
-#pragma endregion Compose Dataset
+/**/
+#pragma endregion
 
 #pragma region Learning
-
+/**
 	//	Create and set network
-	size_t inputDim = 28 * 28;
+ 	size_t inputDim = 28 * 28;
 	vector<size_t> numNeurons_PerLayer(inputDim, 5);				//	5 neurons per layer
 	vector<AFuncType> AFunc_PerLayer(inputDim, AFuncType::SIGMOID);	//	Sigmoid per layer			
 	AFunc_PerLayer.back() = AFuncType::IDENTITY;	//	To use the cross-entropy + softmax
@@ -127,24 +120,31 @@ int main() {
 			netManager.GetAllAFuncType()
 		});
 	EFuncType EType{ EFuncType::CROSSENTROPY_SOFTMAX };
-	
+	vec_r gradE(numParams, 0);
+	vec_r oldGradE(numParams, 0);
+
 	//	Batch
 	for (const auto& epoch : RangeGen(0, maxEpoch)) {
-		vec_r gradE(numParams, 0);
-		
+
+		// Set the gradient to 0
+		fill(gradE.begin(), gradE.end(), 0);	
+
 		for (const auto& sample : trainingSet) {
 			netManager.Run(sample.image1D);	//	FP step
 			auto gradE_sample = netManager.ComputeGradE_PerSample(EType, sample.labelOneHot); // BP step
 			gradE += gradE_sample;
 		}
 
-		//	Update parameters (RPROP)
+		Rprop(netManager, gradE, oldGradE);
 
 		networks_evaluated[epoch].error_training = ComputeError(netManager, trainingSet, EType);
 		networks_evaluated[epoch].error_validation = ComputeError(netManager, validationSet, EType);
+
+		//	Save current gradient
+		oldGradE = gradE;
 	}
 
 	cout << endl;
-#pragma endregion Learning
+#pragma endregion
 /**/
 }
