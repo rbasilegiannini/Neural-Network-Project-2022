@@ -11,6 +11,7 @@
 #include <random>
 
 using std::fill;
+using std::min_element;
 using std::default_random_engine;
 using std::random_device;
 using std::cout;
@@ -28,6 +29,7 @@ struct NetworkConfig_Evaluated {
 	size_t numLayers;
 	vector<size_t> numNeurons_PerLayer;
 	vector<AFuncType> AFuncType_PerLayer;
+	vector<mat_r> params;
 
 	size_t epoch{ 0 };
 	Real error_training{ 0 };
@@ -57,7 +59,7 @@ constexpr size_t MAX_TEST_SAMPLE = 10000;	//Default: 10000
 constexpr size_t NUM_TRAIN_SAMPLE = 5000;	//Request: 5000
 constexpr size_t NUM_VAL_SAMPLE = 2500;		//Request: 2500
 constexpr size_t NUM_TEST_SAMPLE = 2500;	//Request: 2500
-constexpr size_t MAX_EPOCH = 5;
+constexpr size_t MAX_EPOCH = 10;
 
 constexpr AFuncType AFUNC_LAYER = AFuncType::RELU;
 constexpr size_t NUM_NEURONS_LAYER = 5;
@@ -67,7 +69,6 @@ constexpr size_t NUM_CLASS = 10;
 #pragma endregion
 
 int main() { 
-
 #pragma region Compose dataset
 /**/
 	string sampleImagesFile = "train-images.idx3-ubyte";
@@ -101,6 +102,7 @@ int main() {
 		s.image1D = ConvertMatToArray<Real>(sample.image);
 		s.labelOneHot[sample.label] = 1;
 	}
+	samples.clear(); // Free memory
 
 	//	Test Set
 	cout << "Read test samples..." << endl;
@@ -114,11 +116,14 @@ int main() {
 		s.image1D = ConvertMatToArray<Real>(sample.image);
 		s.labelOneHot[sample.label] = 1;
 	}
+	tests.clear(); // Free memory
 
 	cout << "Training set: " << NUM_TRAIN_SAMPLE << " samples." << endl;
 	cout << "Validation set: " << NUM_VAL_SAMPLE << " samples." << endl;
 	cout << "Test set: " << NUM_TEST_SAMPLE << " samples." << endl;
 	cout << endl;
+
+
 /**/
 #pragma endregion
 
@@ -146,7 +151,7 @@ int main() {
 
 	RPROP UpdateRule(numParams, 0.1);
 
-	vector<NetworkConfig_Evaluated> networks_evaluated (MAX_EPOCH, {
+	vector<NetworkConfig_Evaluated> networksEval (MAX_EPOCH, {
 			netManager.GetNumLayers(),
 			netManager.GetAllNumNeurons(),
 			netManager.GetAllAFuncType()
@@ -155,11 +160,19 @@ int main() {
 	EFuncType EType{ EFuncType::CROSSENTROPY_SOFTMAX };
 	vec_r gradE(numParams, 0);
 
+	auto NetworkParams = [&netManager]()-> vector<mat_r> {
+		vector<mat_r> AllParams;
+		for (const auto& layer : RangeGen(0, netManager.GetNumLayers()))
+			AllParams.push_back(netManager.GetAllParam_PerLayer(layer));
+
+		return AllParams;
+	};
+
 	//	Batch
 	cout << "Learning batch..." << endl;
 	for (const auto& epoch : RangeGen(0, MAX_EPOCH)) {
 		cout << "Epoch " << epoch << "... ";
-		networks_evaluated[epoch].epoch = epoch;
+		networksEval[epoch].epoch = epoch;
 
 		// Set the gradient to 0
 		fill(gradE.begin(), gradE.end(), 0);	
@@ -172,12 +185,26 @@ int main() {
 
 		UpdateRule.Run(netManager, gradE);
 
-		networks_evaluated[epoch].error_training = ComputeError(netManager, trainingSet, EType);
-		networks_evaluated[epoch].error_validation = ComputeError(netManager, validationSet, EType);
+		networksEval[epoch].error_training = ComputeError(netManager, trainingSet, EType);
+		networksEval[epoch].error_validation = ComputeError(netManager, validationSet, EType);
+		networksEval[epoch].params = NetworkParams();
 
 		cout << "done." << endl;
 	}
 	cout << endl;
+
+	cout << "Retrieve best net... ";
+	auto cmp = [](const NetworkConfig_Evaluated& lhs, const NetworkConfig_Evaluated& rhs)-> bool {
+		return (lhs.error_validation < rhs.error_validation);
+	};
+	
+	NetworkConfig_Evaluated bestNetEval = *min_element(networksEval.begin(), networksEval.end(), cmp);
+
+	//	Rebuilding network
+	for (const auto& layer : RangeGen(0, netManager.GetNumLayers()))
+		netManager.SetAllParam_PerLayer(layer, bestNetEval.params[layer]);
+
+	cout << "done." << endl;
 /**/	
 #pragma endregion
 
@@ -188,16 +215,27 @@ int main() {
 	vector<double> y_error_val;
 
 	for (const auto& epoch : RangeGen(0, MAX_EPOCH)) {
-		auto net = networks_evaluated[epoch];
+		auto net = networksEval[epoch];
 		x_epoch.push_back(net.epoch);
 		y_error_train.push_back(net.error_training);
 		y_error_val.push_back(net.error_validation);
 	}
 
-	SavePlot("Training error plot RELU", x_epoch, y_error_train);
-	SavePlot("Validation error plot RELU", x_epoch, y_error_val);
+	if(SavePlot("Training error plot RELU", x_epoch, y_error_train))
+		cout << "Training error plot saved." << endl;
+	else
+		cout << "Error to save training error plot." << endl;
 
-	cout << "Plot saved.";
+	if(SavePlot("Validation error plot RELU", x_epoch, y_error_val))
+		cout << "Validation error plot saved." << endl;
+	else
+		cout << "Error to save validation error plot." << endl;
+
+	cout << "Best network:" << endl;
+	cout << "Epoch: " << bestNetEval.epoch << endl;
+	cout << "Training error: " << bestNetEval.error_training << endl;
+	cout << "Validation error: " << bestNetEval.error_validation << endl;
+
 	cout << endl;
 /**/
 #pragma endregion
