@@ -7,6 +7,7 @@
 using boost::numeric::ublas::prod;
 using boost::numeric::ublas::matrix;
 using std::vector;
+using std::max_element;
 
 /**
  * 
@@ -64,10 +65,31 @@ inline vector<int> RangeGen(const int first, const int last) {
  */
 inline Real SoftMax(const mat_r& outputs, const size_t idxOutput) {
 
+	//	Handling potential numeric instability
+	Real maxValue = *max_element(outputs.data().begin(), outputs.data().end());
+	mat_r outputsNorm{ outputs };
+	for (auto& o : outputsNorm.data())
+		o -= maxValue;
+
 	Real summation{ 0 };
-	for (const auto& h : RangeGen(0, outputs.size1())) 
-		summation += exp(outputs(h, 0));
-	Real SM = exp(outputs(idxOutput, 0)) / summation;
+	for (const auto& h : RangeGen(0, outputsNorm.size1()))
+		summation += exp(outputsNorm(h, 0));
+	Real SM = exp(outputsNorm(idxOutput, 0)) / summation;
+
+
+	/*DEBUG
+	std::cout << "Output: " << std::endl;
+	for (const auto& e : outputs.data())
+		std::cout << e << " ";
+	std::cout << std::endl; 
+
+	std::cout << "Max value:" << maxValue << std::endl;
+	std::cout << "New output" << std::endl;
+
+	for (const auto& e : outputsNorm.data())
+		std::cout << e << " ";
+	std::cout << std::endl;
+	*/
 
  	return SM;
 }

@@ -8,44 +8,42 @@ using std::string;
 using std::max_element;
 
 template<typename T>
-inline void SavePlot(const string& namePlot, const vector<T>& x_axis, const vector<T>& y_axis) {
+inline bool SavePlot(const string& namePlot, const vector<T>& x_axis, const vector<T>& y_axis) {
 
-	vector<double> x_axis_plot;
-	vector<double> y_axis_plot;
+	bool success;
 	StringReference* errorMessage = new StringReference();
+	RGBABitmapImageReference* imageReference = CreateRGBABitmapImageReference();
 
-	//	Conversion Real to double
-	for (const auto& x : x_axis)
-		x_axis_plot.push_back((double)x);
-	for (const auto& y : y_axis)
-		y_axis_plot.push_back((double)y);
+	vector<double> xs{ x_axis };
+	vector<double> ys{ y_axis };
 
 	ScatterPlotSeries* series = GetDefaultScatterPlotSeriesSettings();
-	series->xs = &x_axis_plot;
-	series->ys = &y_axis_plot;
+	series->xs = &xs;
+	series->ys = &ys;
 	series->linearInterpolation = true;
 	series->lineType = toVector(L"solid");
-	series->lineThickness = 2;
-	series->color = GetBlack();
+	series->lineThickness = 1;
+	series->color = GetGray(0.3);
 
 	ScatterPlotSettings* settings = GetDefaultScatterPlotSettings();
-	settings->width = 800;
-	settings->height = 400;
+	settings->width = 1000;
+	settings->height = 1000;
 	settings->autoBoundaries = false;
 	settings->xMin = 0;
-	settings->xMax = x_axis_plot.back() + 5;
+	settings->xMax = xs.back() + 5;
 	settings->yMin = 0;
-	settings->yMax = *max_element(y_axis_plot.begin(), y_axis_plot.end()) + y_axis_plot.back() * 0.1;
+	settings->yMax = *max_element(ys.begin(), ys.end());
 	settings->autoPadding = true;
 	settings->xLabel = toVector(L"Epoch");
 	settings->yLabel = toVector(L"Error");
 	settings->scatterPlotSeries->push_back(series);
 
-	RGBABitmapImageReference* imageReference = CreateRGBABitmapImageReference();
-
-	DrawScatterPlotFromSettings(imageReference, settings, errorMessage);
+	success = DrawScatterPlotFromSettings(imageReference, settings, errorMessage);
+	
 	//	Save in png
-	vector<double>* pngData = ConvertToPNG(imageReference->image);
-	WriteToFile(pngData, namePlot + ".png");
-	DeleteImage(imageReference->image);
+	if (success) {
+		vector<double>* pngData = ConvertToPNG(imageReference->image);
+		WriteToFile(pngData, namePlot + ".png");
+	}
+	return success;
 }

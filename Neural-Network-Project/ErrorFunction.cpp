@@ -1,5 +1,7 @@
 #include "ErrorFunction.h"
 
+using std::max;
+
 map<EFuncType, function<Real(const mat_r&, const mat_r&)>> ErrorFunction::EFunction = {
 
     { EFuncType::SUMOFSQUARES, [](const mat_r& output, const mat_r& target) {
@@ -84,8 +86,8 @@ Real ErrorFunction::_crossEntropy(const mat_r& NNOutput, const mat_r& targets) {
 			std::cout << "[ERROR] output is not compatible with Cross Entropy." << std::endl;
 			return -1;
 		}
-
-		summation += targets(k,0) * log(NNOutput(k,0));
+		auto out = max(NNOutput(k, 0), (Real)1e-07);	// To avoid 0
+		summation += targets(k,0) * log(out);
 	}
 	Real loss{ -summation };
 
@@ -102,7 +104,9 @@ Real ErrorFunction::_crossEntropy_softMax(const mat_r& NNOutput, const mat_r& ta
 	//	Summation
 	Real summation{ 0 };
 	for (const auto& k : RangeGen(0, NNOutput.size1())) {
-		summation += targets(k,0) * log(SoftMax(NNOutput, k));
+		// DEBUG
+		auto sm = max(SoftMax(NNOutput, k), (Real)1e-07);	// To avoid 0
+		summation += targets(k,0) * log(sm);
 	}
 
 	Real loss{ -summation };

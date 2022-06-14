@@ -140,7 +140,7 @@ void TestCase_GradientComputation() {
 
 		for (auto& f : AFuncPerLayer) {
 
-			size_t choiceA{ (size_t)(rand() % 3) };
+			size_t choiceA{ (size_t)(rand() % 3)};
 			switch (choiceA)
 			{
 			case 0:
@@ -165,7 +165,7 @@ void TestCase_GradientComputation() {
 		nnManager.ResetHyperparameters(newHyp);
 
 		EFuncType Etype;
-		size_t choiceE{ (size_t)(rand() % 3) };
+		size_t choiceE{ (size_t)(rand() % 3)};
 		switch (choiceE)
 		{
 		case 0:

@@ -47,10 +47,7 @@ Real ActivationFunction::_identity(const Real input) {
 }
 
 Real ActivationFunction::_relu(const Real input) {
-	if (input < 0)
-		return 0;
-	else
-		return input;
+	return std::max((Real)0, input);
 }
 
 Real ActivationFunction::_sigmoid_Der(const Real input) {
@@ -59,8 +56,10 @@ Real ActivationFunction::_sigmoid_Der(const Real input) {
 }
 
 Real ActivationFunction::_relu_Der(const Real input) {
-	if (input < 0)
-		return 0;
+
+	Real zero{ 0 };
+	if (input <= zero)
+		return zero;
 	else
-		return 1;
+		return (Real)1;
 }
