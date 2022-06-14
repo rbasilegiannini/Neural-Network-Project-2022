@@ -30,7 +30,7 @@ typedef matrix<Real> mat_r;
 typedef vector<Real> vec_r;
 
 /**
- *	Range generator.
+ * Range generator.
  * 
  * \param	first is the first element of the range.
  * \param	last is the last element of the range (not included).
@@ -55,6 +55,13 @@ inline vector<int> RangeGen(const int first, const int last) {
 	return range;
 }
 
+/**
+ * This function compute the SoftMax.
+ * 
+ * \param outputs is the column vector with all the outputs.
+ * \param idxOutput is the neuron's output index.
+ * \return the result.
+ */
 inline Real SoftMax(const mat_r& outputs, const size_t idxOutput) {
 
 	Real summation{ 0 };
@@ -65,12 +72,27 @@ inline Real SoftMax(const mat_r& outputs, const size_t idxOutput) {
  	return SM;
 }
 
+
+/**
+ * This function performs the row by column product.
+ * 
+ * \param row
+ * \param column
+ * \return the result.
+ */
 inline Real row_by_column (const mat_r& row, const mat_r& column) {
 
 	auto result = prod(row, column);
 	return result(0, 0);
 }
 
+/**
+ * This function extracts a column from a matrix of real.
+ * 
+ * \param mat
+ * \param col is the index of the column.
+ * \return the column as a column vector.
+ */
 inline mat_r extract_column(const mat_r& mat, const size_t col) {
 
 	mat_r extractor(mat.size1(), 1);
@@ -80,8 +102,14 @@ inline mat_r extract_column(const mat_r& mat, const size_t col) {
 	return extractor;
 }
 
+/**
+ * This function converts a matrix in a vector.
+ * 
+ * \param mat
+ * \return a vector with the same type element of the matrix.
+ */
 template <typename T>
-vector<T> ConvertMatToArray(const matrix<T>& mat) {
+inline vector<T> ConvertMatToArray(const matrix<T>& mat) {
 	vector<T> arr;
 	for (const auto& row : RangeGen(0, mat.size1()))
 		for (const auto& col : RangeGen(0, mat.size2()))
@@ -89,6 +117,7 @@ vector<T> ConvertMatToArray(const matrix<T>& mat) {
 	return arr;
 }
 
+//	Overload operator += of vector
 template <typename T>
 vector<T>& operator+=(vector<T>& vec1, const vector<T>& vec2) {
 	for (const auto& i : RangeGen(0, vec1.size()))
@@ -96,6 +125,13 @@ vector<T>& operator+=(vector<T>& vec1, const vector<T>& vec2) {
 	return vec1;
 }
 
-template <typename T> int sgn(T val) {
+/**
+ * This functions return the sign of an input.
+ * 
+ * \param val
+ * \return +1 or -1.
+ */
+template <typename T> 
+inline int sgn(T val) {
 	return (T(0) < val) - (val < T(0));
 }

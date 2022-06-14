@@ -1,9 +1,10 @@
-// Neural-Network-Project.cpp : This file contains the 'main' function. Program execution begins and ends there.
+// main.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
 #include "TestFunction.h"
 #include "RPROP.h"
 #include "ReadMNIST.h"
+#include "AnalysisTools.h"
 
 #include <array>
 #include <algorithm>
@@ -17,6 +18,7 @@ using std::endl;
 using std::array;
 using std::uniform_int_distribution;
 
+#pragma region Support
 struct Sample1D {
 	vector<Real> image1D;
 	vec_r labelOneHot{ vec_r(10, 0) };
@@ -26,7 +28,7 @@ struct NetworkConfig_Evaluated {
 	size_t numLayers;
 	vector<size_t> numNeurons_PerLayer;
 	vector<AFuncType> AFuncType_PerLayer;
-	
+
 	size_t epoch{ 0 };
 	Real error_training{ 0 };
 	Real error_validation{ 0 };
@@ -46,20 +48,23 @@ Real ComputeError(NeuralNetworkManager& nnManager, const vector<Sample1D>& datas
 	}
 	return error;
 }
+#pragma endregion
 
-constexpr size_t MAX_TRAIN_SAMPLE = 6000;	//Default: 60000
-constexpr size_t MAX_TEST_SAMPLE = 1000;	//Default: 10000
+#pragma region Settings
+constexpr size_t MAX_TRAIN_SAMPLE = 60000;	//Default: 60000
+constexpr size_t MAX_TEST_SAMPLE = 10000;	//Default: 10000
 
-constexpr size_t NUM_TRAIN_SAMPLE = 500;	//Request: 5000
-constexpr size_t NUM_VAL_SAMPLE = 250;		//Request: 2500
-constexpr size_t NUM_TEST_SAMPLE = 250;	//Request: 2500
-constexpr size_t MAX_EPOCH = 500;
+constexpr size_t NUM_TRAIN_SAMPLE = 5000;	//Request: 5000
+constexpr size_t NUM_VAL_SAMPLE = 2500;		//Request: 2500
+constexpr size_t NUM_TEST_SAMPLE = 2500;	//Request: 2500
+constexpr size_t MAX_EPOCH = 5;
 
-constexpr AFuncType AFUNC_LAYER = AFuncType::SIGMOID;
+constexpr AFuncType AFUNC_LAYER = AFuncType::RELU;
 constexpr size_t NUM_NEURONS_LAYER = 5;
 constexpr size_t NUM_LAYERS = 5;
 
 constexpr size_t NUM_CLASS = 10;
+#pragma endregion
 
 int main() { 
 
@@ -178,14 +183,21 @@ int main() {
 
 #pragma region Results
 /**/
-	cout << "Results: " << endl;
+	vector<double> x_epoch;
+	vector<double> y_error_train;
+	vector<double> y_error_val;
 
-	for (const auto& net : networks_evaluated) {
-		cout << "Epoch: " << net.epoch << endl;
-		cout << "E_train: " << net.error_training << endl;
-		cout << "E_val: " << net.error_validation << endl;
+	for (const auto& epoch : RangeGen(0, MAX_EPOCH)) {
+		auto net = networks_evaluated[epoch];
+		x_epoch.push_back(net.epoch);
+		y_error_train.push_back(net.error_training);
+		y_error_val.push_back(net.error_validation);
 	}
 
+	SavePlot("Training error plot RELU", x_epoch, y_error_train);
+	SavePlot("Validation error plot RELU", x_epoch, y_error_val);
+
+	cout << "Plot saved.";
 	cout << endl;
 /**/
 #pragma endregion

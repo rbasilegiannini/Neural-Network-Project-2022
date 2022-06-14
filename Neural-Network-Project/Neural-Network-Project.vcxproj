@@ -116,7 +116,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Program Files %28x86%29\boost_1_79_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files %28x86%29\boost_1_79_0;C:\Users\RBG94\source\repos\Neural Network Project 2022\Neural-Network-Project-2022\Neural-Network-Project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -146,17 +146,22 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NeuralNetworkFF.cpp" />
     <ClCompile Include="NeuralNetworkManager.cpp" />
+    <ClCompile Include="pbPlots\pbPlots.cpp" />
+    <ClCompile Include="pbPlots\supportLib.cpp" />
     <ClCompile Include="ReadMNIST.cpp" />
     <ClCompile Include="RPROP.cpp" />
     <ClCompile Include="TestFunction.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ActivationFunction.h" />
+    <ClInclude Include="AnalysisTools.h" />
     <ClInclude Include="BackPropagation.h" />
     <ClInclude Include="ErrorFunction.h" />
     <ClInclude Include="InvalidParametersException.h" />
     <ClInclude Include="NeuralNetworkFF.h" />
     <ClInclude Include="NeuralNetworkManager.h" />
+    <ClInclude Include="pbPlots\pbPlots.hpp" />
+    <ClInclude Include="pbPlots\supportLib.hpp" />
     <ClInclude Include="ReadMNIST.h" />
     <ClInclude Include="RPROP.h" />
     <ClInclude Include="TestFunction.h" />
