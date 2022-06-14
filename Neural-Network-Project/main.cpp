@@ -2,7 +2,7 @@
 //
 
 #include "TestFunction.h"
-#include "UpdateRule.h"
+#include "RPROP.h"
 #include "ReadMNIST.h"
 
 #include <array>
@@ -27,6 +27,7 @@ struct NetworkConfig_Evaluated {
 	vector<size_t> numNeurons_PerLayer;
 	vector<AFuncType> AFuncType_PerLayer;
 	
+	size_t epoch{ 0 };
 	Real error_training{ 0 };
 	Real error_validation{ 0 };
 };
@@ -46,10 +47,24 @@ Real ComputeError(NeuralNetworkManager& nnManager, const vector<Sample1D>& datas
 	return error;
 }
 
+constexpr size_t MAX_TRAIN_SAMPLE = 6000;	//Default: 60000
+constexpr size_t MAX_TEST_SAMPLE = 1000;	//Default: 10000
+
+constexpr size_t NUM_TRAIN_SAMPLE = 500;	//Request: 5000
+constexpr size_t NUM_VAL_SAMPLE = 250;		//Request: 2500
+constexpr size_t NUM_TEST_SAMPLE = 250;	//Request: 2500
+constexpr size_t MAX_EPOCH = 500;
+
+constexpr AFuncType AFUNC_LAYER = AFuncType::SIGMOID;
+constexpr size_t NUM_NEURONS_LAYER = 5;
+constexpr size_t NUM_LAYERS = 5;
+
+constexpr size_t NUM_CLASS = 10;
+
 int main() { 
 
 #pragma region Compose dataset
-/**
+/**/
 	string sampleImagesFile = "train-images.idx3-ubyte";
 	string sampleLabelsFile = "train-labels.idx1-ubyte"; 
 	string testImagesFile = "t10k-images.idx3-ubyte";
@@ -58,21 +73,24 @@ int main() {
 	random_device rd;
 	unsigned seed = rd();
 	auto rng = default_random_engine(seed);	//TOREFACT: move to heap
-	uniform_int_distribution<int> uDist_train(0, 59999);
-	uniform_int_distribution<int> uDist_test(0, 9999);
+	uniform_int_distribution<int> uDist_train(0, MAX_TRAIN_SAMPLE - 1);
+	uniform_int_distribution<int> uDist_test(0, MAX_TEST_SAMPLE - 1);
 
 	//	Training Set and Validation Set
-	vector<ImageLabeled> samples = ReadSample(sampleImagesFile, sampleLabelsFile, 60000);
+	cout << "Read training samples..." << endl;
+	vector<ImageLabeled> samples = ReadSample(sampleImagesFile, sampleLabelsFile, MAX_TRAIN_SAMPLE);
 	shuffle(samples.begin(), samples.end(), rng);
 
-	vector<Sample1D> trainingSet(5000);
+	cout << "Compose training set..." << endl;
+	vector<Sample1D> trainingSet(NUM_TRAIN_SAMPLE);
 	for (auto& s : trainingSet) {
 		auto sample = samples[uDist_train(rng)];
 		s.image1D = ConvertMatToArray<Real>(sample.image);
 		s.labelOneHot[sample.label] = 1;
 	}
 
-	vector<Sample1D> validationSet (2500);
+	cout << "Compose validation set..." << endl;
+	vector<Sample1D> validationSet (NUM_VAL_SAMPLE);
 	for (auto& s : validationSet) {
 		auto sample = samples[uDist_train(rng)];
 		s.image1D = ConvertMatToArray<Real>(sample.image);
@@ -80,24 +98,32 @@ int main() {
 	}
 
 	//	Test Set
-	vector<ImageLabeled> tests = ReadSample(testImagesFile, testLabelsFile, 10000);
+	cout << "Read test samples..." << endl;
+	vector<ImageLabeled> tests = ReadSample(testImagesFile, testLabelsFile, MAX_TEST_SAMPLE);
 	shuffle(tests.begin(), tests.end(), rng);
 
-	vector<Sample1D> testSet(2500);
+	cout << "Compose test set..." << endl;
+	vector<Sample1D> testSet(NUM_TEST_SAMPLE);
 	for (auto& s : testSet) {
 		auto sample = tests[uDist_test(rng)];
 		s.image1D = ConvertMatToArray<Real>(sample.image);
 		s.labelOneHot[sample.label] = 1;
 	}
+
+	cout << "Training set: " << NUM_TRAIN_SAMPLE << " samples." << endl;
+	cout << "Validation set: " << NUM_VAL_SAMPLE << " samples." << endl;
+	cout << "Test set: " << NUM_TEST_SAMPLE << " samples." << endl;
+	cout << endl;
 /**/
 #pragma endregion
 
 #pragma region Learning
-/**
+/**/
 	//	Create and set network
- 	size_t inputDim = 28 * 28;
-	vector<size_t> numNeurons_PerLayer(inputDim, 5);				//	5 neurons per layer
-	vector<AFuncType> AFunc_PerLayer(inputDim, AFuncType::SIGMOID);	//	Sigmoid per layer			
+	size_t inputDim{ 28 * 28 };
+	vector<size_t> numNeurons_PerLayer(NUM_LAYERS, NUM_NEURONS_LAYER);
+	vector<AFuncType> AFunc_PerLayer(NUM_LAYERS, AFUNC_LAYER);
+	numNeurons_PerLayer.back() = NUM_CLASS;	//	Output network
 	AFunc_PerLayer.back() = AFuncType::IDENTITY;	//	To use the cross-entropy + softmax
 
 	Hyperparameters hyp{
@@ -113,18 +139,22 @@ int main() {
 	for (const auto& layer : RangeGen(0, netManager.GetNumLayers()))
 		numParams += netManager.GetAllParam_PerLayer(layer).size1() * netManager.GetAllParam_PerLayer(layer).size2();
 
-	size_t maxEpoch{ 100 };
-	vector<NetworkConfig_Evaluated> networks_evaluated (maxEpoch, {
+	RPROP UpdateRule(numParams, 0.1);
+
+	vector<NetworkConfig_Evaluated> networks_evaluated (MAX_EPOCH, {
 			netManager.GetNumLayers(),
 			netManager.GetAllNumNeurons(),
 			netManager.GetAllAFuncType()
 		});
+
 	EFuncType EType{ EFuncType::CROSSENTROPY_SOFTMAX };
 	vec_r gradE(numParams, 0);
-	vec_r oldGradE(numParams, 0);
 
 	//	Batch
-	for (const auto& epoch : RangeGen(0, maxEpoch)) {
+	cout << "Learning batch..." << endl;
+	for (const auto& epoch : RangeGen(0, MAX_EPOCH)) {
+		cout << "Epoch " << epoch << "... ";
+		networks_evaluated[epoch].epoch = epoch;
 
 		// Set the gradient to 0
 		fill(gradE.begin(), gradE.end(), 0);	
@@ -135,16 +165,29 @@ int main() {
 			gradE += gradE_sample;
 		}
 
-		Rprop(netManager, gradE, oldGradE);
+		UpdateRule.Run(netManager, gradE);
 
 		networks_evaluated[epoch].error_training = ComputeError(netManager, trainingSet, EType);
 		networks_evaluated[epoch].error_validation = ComputeError(netManager, validationSet, EType);
 
-		//	Save current gradient
-		oldGradE = gradE;
+		cout << "done." << endl;
+	}
+	cout << endl;
+/**/	
+#pragma endregion
+
+#pragma region Results
+/**/
+	cout << "Results: " << endl;
+
+	for (const auto& net : networks_evaluated) {
+		cout << "Epoch: " << net.epoch << endl;
+		cout << "E_train: " << net.error_training << endl;
+		cout << "E_val: " << net.error_validation << endl;
 	}
 
 	cout << endl;
-#pragma endregion
 /**/
+#pragma endregion
+
 }

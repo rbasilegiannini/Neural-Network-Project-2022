@@ -39,7 +39,7 @@ throw (InvalidParametersException) {
 
 #pragma region Checks
 	if (target.size1() != nNeuronsLayer.back())
-		throw InvalidParametersException("[BACKPROP] the target is not compatbile with network's output.");
+		throw InvalidParametersException("[BACKPROP] the target is not compatible with network's output.");
 
 	//	Check on loss function
 	EFuncType EFuncType{ EType };
