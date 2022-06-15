@@ -127,6 +127,20 @@ inline vector<T> ConvertMatToArray(const matrix<T>& mat) {
 	return arr;
 }
 
+/**
+ * This function is used to normalize a vector in [0, 1].
+ * 
+ * \param vec
+ * \return A vector of the same type but normalized.
+ */
+template <typename T>
+inline vector<T> NormalizeVector(const vector<T> vec) {
+	vector<T> arrNorm;
+	for (const auto& e : vec)
+		arrNorm.push_back(e / vec.size());
+	return arrNorm;
+}
+
 //	Overload operator += of vector
 template <typename T>
 vector<T>& operator+=(vector<T>& vec1, const vector<T>& vec2) {

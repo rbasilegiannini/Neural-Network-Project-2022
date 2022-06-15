@@ -44,7 +44,7 @@ struct NetConfig_Evaluated {
 typedef vector<Sample1D> Dataset;
 
 void ComposeDataset(Dataset&, Dataset&, Dataset&);
-void Learning(NeuralNetworkManager&, vector<NetConfig_Evaluated>&, const Dataset&, const Dataset&);
+void Learning(NeuralNetworkManager&, vector<NetConfig_Evaluated>&, const Dataset&, const Dataset&, const size_t maxEpoch);
 float Accuracy(NeuralNetworkManager&, const Dataset&);
 Real ComputeError(NeuralNetworkManager&, const vector<Sample1D>&, const EFuncType&);
 NetConfig_Evaluated RetrieveBestNet(const vector<NetConfig_Evaluated>&, NeuralNetworkManager&);
@@ -53,9 +53,6 @@ NetConfig_Evaluated RetrieveBestNet(const vector<NetConfig_Evaluated>&, NeuralNe
 
 #pragma region Settings
 
-constexpr size_t MAX_TRAIN_SAMPLE = 60000;	//Default: 60000
-constexpr size_t MAX_TEST_SAMPLE = 10000;	//Default: 10000
-
 constexpr size_t NUM_TRAIN_SAMPLE = 5000;	//Request: 5000
 constexpr size_t NUM_VAL_SAMPLE = 2500;		//Request: 2500
 constexpr size_t NUM_TEST_SAMPLE = 2500;	//Request: 2500
@@ -63,21 +60,21 @@ constexpr size_t MAX_EPOCH = 10;
 constexpr size_t NUM_LEARNING = 3;
 
 constexpr AFuncType AFUNC_LAYER = AFuncType::SIGMOID;
-constexpr size_t NUM_NEURONS_LAYER = 10;
-constexpr size_t NUM_LAYERS = 5;
+constexpr size_t NUM_NEURONS_LAYER = 5;
+constexpr size_t NUM_INNER_LAYERS = 1;
 
 constexpr size_t NUM_CLASS = 10;
  
 #pragma endregion
 
 int main() {
-	string testCase = NameOfAFuncType(AFUNC_LAYER) + " " + to_string(NUM_LAYERS)
-		+ " layers" + " " + to_string(NUM_NEURONS_LAYER) + " neurons per layer";
+	string testCase = NameOfAFuncType(AFUNC_LAYER) + " " + to_string(NUM_INNER_LAYERS)
+		+ " inner layers" + " " + to_string(NUM_NEURONS_LAYER) + " neurons per layer";
 
 	//	Prepare network manager
 	size_t inputDim{ 28 * 28 };
-	vector<size_t> numNeurons_PerLayer(NUM_LAYERS, NUM_NEURONS_LAYER);
-	vector<AFuncType> AFunc_PerLayer(NUM_LAYERS, AFUNC_LAYER);
+	vector<size_t> numNeurons_PerLayer(NUM_INNER_LAYERS+1, NUM_NEURONS_LAYER);
+	vector<AFuncType> AFunc_PerLayer(NUM_INNER_LAYERS+1, AFUNC_LAYER);
 
 	numNeurons_PerLayer.back() = NUM_CLASS; // Output network
 	AFunc_PerLayer.back() = AFuncType::IDENTITY; // To use the cross-entropy + softmax
@@ -93,14 +90,15 @@ int main() {
 	NetConfig_Evaluated bestNetEval;
 	Dataset trainingSet, validationSet, testSet;
 
+	ComposeDataset(trainingSet, validationSet, testSet);
+
 	vector<float> accuracies;
 	for (const auto& attempt : RangeGen(0, NUM_LEARNING)) {
 		cout << "ATTEMPT " << attempt+1 << endl;
+		netManager.RandomInitialization(0, 1);
 
-		ComposeDataset(trainingSet, validationSet, testSet);
-		Learning(netManager, networksEval, trainingSet, validationSet);
+		Learning(netManager, networksEval, trainingSet, validationSet, MAX_EPOCH);
 		bestNetEval = RetrieveBestNet(networksEval, netManager);
-
 		accuracies.push_back(Accuracy(netManager, testSet));
 		
 		cout << endl;
@@ -154,42 +152,36 @@ void ComposeDataset(Dataset& trainSet, Dataset& valSet, Dataset& testSet) {
 	string testImagesFile = "t10k-images.idx3-ubyte";
 	string testLabelsFile = "t10k-labels.idx1-ubyte";
 
-	random_device rd;
-	unsigned seed = rd();
-	auto rng = default_random_engine(seed);
-	uniform_int_distribution<int> uDist_train(0, MAX_TRAIN_SAMPLE - 1);
-	uniform_int_distribution<int> uDist_test(0, MAX_TEST_SAMPLE - 1);
-
 	//	Training Set and Validation Set
 	cout << "Read training samples..." << endl;
-	vector<ImageLabeled> samples = ReadSample(sampleImagesFile, sampleLabelsFile, MAX_TRAIN_SAMPLE);
-	shuffle(samples.begin(), samples.end(), rng);
+	vector<ImageLabeled> samples = ReadSample(sampleImagesFile, sampleLabelsFile, NUM_TRAIN_SAMPLE + NUM_VAL_SAMPLE);
 
+	//	First NUM_TRAIN_SAMPLE samples
 	cout << "Compose training set..." << endl;
-	for (auto& s : trainSet) {
-		auto sample = samples[uDist_train(rng)];
-		s.image1D = ConvertMatToArray<Real>(sample.image);
-		s.labelOneHot[sample.label] = 1;
+	for (const auto& i : RangeGen(0, NUM_TRAIN_SAMPLE)) {
+		auto sample = samples[i];
+		trainSet[i].image1D = NormalizeVector(ConvertMatToArray<Real>(sample.image));
+		trainSet[i].labelOneHot[sample.label] = 1;
 	}
 
+	//	Last NUM_VAL_SAMPLE samples
 	cout << "Compose validation set..." << endl;
-	for (auto& s : valSet) {
-		auto sample = samples[uDist_train(rng)];
-		s.image1D = ConvertMatToArray<Real>(sample.image);
-		s.labelOneHot[sample.label] = 1;
+	for (const auto& i : RangeGen(0, NUM_VAL_SAMPLE)) {
+		auto sample = samples[NUM_TRAIN_SAMPLE+i];
+		valSet[i].image1D = NormalizeVector(ConvertMatToArray<Real>(sample.image));
+		valSet[i].labelOneHot[sample.label] = 1;
 	}
 	samples.clear(); // Free memory
 
 	//	Test Set
 	cout << "Read test samples..." << endl;
-	vector<ImageLabeled> tests = ReadSample(testImagesFile, testLabelsFile, MAX_TEST_SAMPLE);
-	shuffle(tests.begin(), tests.end(), rng);
+	vector<ImageLabeled> tests = ReadSample(testImagesFile, testLabelsFile, NUM_TEST_SAMPLE);
 
 	cout << "Compose test set..." << endl;
-	for (auto& s : testSet) {
-		auto sample = tests[uDist_test(rng)];
-		s.image1D = ConvertMatToArray<Real>(sample.image);
-		s.labelOneHot[sample.label] = 1;
+	for (const auto& i : RangeGen(0, NUM_TEST_SAMPLE)) {
+		auto sample = tests[i];
+		testSet[i].image1D = NormalizeVector(ConvertMatToArray<Real>(sample.image));
+		testSet[i].labelOneHot[sample.label] = 1;
 	}
 	tests.clear(); // Free memory
 
@@ -199,7 +191,7 @@ void ComposeDataset(Dataset& trainSet, Dataset& valSet, Dataset& testSet) {
 	cout << endl;
 }
 void Learning(NeuralNetworkManager& netManager, vector<NetConfig_Evaluated>& networksEval,
-	const Dataset& trainSet, const Dataset& valSet) {
+	const Dataset& trainSet, const Dataset& valSet, const size_t maxEpoch) {
 
 	// Tools
 	auto NetworkParams = [&netManager]()-> vector<mat_r> {
@@ -228,7 +220,7 @@ void Learning(NeuralNetworkManager& netManager, vector<NetConfig_Evaluated>& net
 
 	// Batch
 	cout << "Learning batch..." << endl;
-	for (const auto& epoch : RangeGen(0, MAX_EPOCH)) {
+	for (const auto& epoch : RangeGen(0, maxEpoch)) {
 		cout << "Epoch " << epoch << "... ";
 		networksEval[epoch].epoch = epoch;
 
