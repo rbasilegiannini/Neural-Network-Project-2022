@@ -9,50 +9,50 @@
 #include <array>
 #include <algorithm>
 #include <random>
+#include <numeric>
+
+#pragma region Support
 
 using std::fill;
 using std::min_element;
+using std::max_element;
+using std::accumulate;
 using std::default_random_engine;
 using std::random_device;
 using std::cout;
 using std::endl;
 using std::array;
 using std::uniform_int_distribution;
+using std::to_string;
 
-#pragma region Support
 struct Sample1D {
 	vector<Real> image1D;
 	vec_r labelOneHot{ vec_r(10, 0) };
 };
 
-struct NetworkConfig_Evaluated {
+struct NetConfig_Evaluated {
 	size_t numLayers;
 	vector<size_t> numNeurons_PerLayer;
 	vector<AFuncType> AFuncType_PerLayer;
 	vector<mat_r> params;
 
 	size_t epoch{ 0 };
-	Real error_training{ 0 };
-	Real error_validation{ 0 };
+	vector<Real> error_training{ 0 };
+	vector<Real> error_validation{ 0 };
 };
 
-Real ComputeError(NeuralNetworkManager& nnManager, const vector<Sample1D>& dataset, const EFuncType& Etype) {
+typedef vector<Sample1D> Dataset;
 
-	Real error{ 0 };
-	for (const auto& sample : dataset) {
-		nnManager.Run(sample.image1D);
+void ComposeDataset(Dataset&, Dataset&, Dataset&);
+void Learning(NeuralNetworkManager&, vector<NetConfig_Evaluated>&, const Dataset&, const Dataset&);
+float Accuracy(NeuralNetworkManager&, const Dataset&);
+Real ComputeError(NeuralNetworkManager&, const vector<Sample1D>&, const EFuncType&);
+NetConfig_Evaluated RetrieveBestNet(const vector<NetConfig_Evaluated>&, NeuralNetworkManager&);
 
-		mat_r columnTarget(sample.labelOneHot.size(), 1);
-		for (const auto& t : RangeGen(0, columnTarget.size1()))
-			columnTarget(t, 0) = sample.labelOneHot[t];
-		error += ErrorFunction::EFunction[Etype](nnManager.GetNetworkOutput(), columnTarget);
-
-	}
-	return error;
-}
 #pragma endregion
 
 #pragma region Settings
+
 constexpr size_t MAX_TRAIN_SAMPLE = 60000;	//Default: 60000
 constexpr size_t MAX_TEST_SAMPLE = 10000;	//Default: 10000
 
@@ -60,25 +60,103 @@ constexpr size_t NUM_TRAIN_SAMPLE = 5000;	//Request: 5000
 constexpr size_t NUM_VAL_SAMPLE = 2500;		//Request: 2500
 constexpr size_t NUM_TEST_SAMPLE = 2500;	//Request: 2500
 constexpr size_t MAX_EPOCH = 10;
+constexpr size_t NUM_LEARNING = 3;
 
-constexpr AFuncType AFUNC_LAYER = AFuncType::RELU;
-constexpr size_t NUM_NEURONS_LAYER = 5;
+constexpr AFuncType AFUNC_LAYER = AFuncType::SIGMOID;
+constexpr size_t NUM_NEURONS_LAYER = 10;
 constexpr size_t NUM_LAYERS = 5;
 
 constexpr size_t NUM_CLASS = 10;
+ 
 #pragma endregion
 
-int main() { 
-#pragma region Compose dataset
-/**/
+int main() {
+	string testCase = NameOfAFuncType(AFUNC_LAYER) + " " + to_string(NUM_LAYERS)
+		+ " layers" + " " + to_string(NUM_NEURONS_LAYER) + " neurons per layer";
+
+	//	Prepare network manager
+	size_t inputDim{ 28 * 28 };
+	vector<size_t> numNeurons_PerLayer(NUM_LAYERS, NUM_NEURONS_LAYER);
+	vector<AFuncType> AFunc_PerLayer(NUM_LAYERS, AFUNC_LAYER);
+
+	numNeurons_PerLayer.back() = NUM_CLASS; // Output network
+	AFunc_PerLayer.back() = AFuncType::IDENTITY; // To use the cross-entropy + softmax
+	Hyperparameters hyp{
+		inputDim,
+		numNeurons_PerLayer,
+		AFunc_PerLayer
+	};
+	NeuralNetworkManager& netManager = NeuralNetworkManager::GetNNManager(hyp);
+	//
+	
+	vector<NetConfig_Evaluated> networksEval;
+	NetConfig_Evaluated bestNetEval;
+	Dataset trainingSet, validationSet, testSet;
+
+	vector<float> accuracies;
+	for (const auto& attempt : RangeGen(0, NUM_LEARNING)) {
+		cout << "ATTEMPT " << attempt+1 << endl;
+
+		ComposeDataset(trainingSet, validationSet, testSet);
+		Learning(netManager, networksEval, trainingSet, validationSet);
+		bestNetEval = RetrieveBestNet(networksEval, netManager);
+
+		accuracies.push_back(Accuracy(netManager, testSet));
+		
+		cout << endl;
+	}
+	float avgAcc = accumulate(accuracies.begin(), accuracies.end(), (float)0) / NUM_LEARNING;
+	auto minmax = std::minmax_element(accuracies.begin(), accuracies.end());
+	float range =  (*minmax.second - *minmax.first)/2;
+
+	// Results
+	vector<double> x_epoch;
+	vector<double> y_error_train;
+	vector<double> y_error_val;
+
+	for (const auto& epoch : RangeGen(0, MAX_EPOCH)) {
+		auto net = networksEval[epoch];
+		float avgErrorTrain = accumulate(net.error_training.begin(), net.error_training.end(), (float)0) / NUM_LEARNING;
+		float avgErrorVal = accumulate(net.error_validation.begin(), net.error_validation.end(), (float)0) / NUM_LEARNING;
+
+		x_epoch.push_back(net.epoch);
+		y_error_train.push_back(avgErrorTrain);
+		y_error_val.push_back(avgErrorVal);
+	}
+
+	if(SavePlot("Training error "+ testCase, x_epoch, y_error_train))
+		cout << "Training error plot saved." << endl;
+	else
+		cout << "Error to save training error plot." << endl;
+
+	if(SavePlot("Validation error " + testCase, x_epoch, y_error_val))
+		cout << "Validation error plot saved." << endl;
+	else
+		cout << "Error to save validation error plot." << endl;
+	cout << endl;
+
+	cout << "Best network with:" << endl;
+	cout << "Epoch: " << bestNetEval.epoch << endl;
+	cout << "Accuracy: (" << avgAcc * 100 << " +- " << range * 100 << ")%" << endl;
+	cout << endl;
+}
+
+// Body
+
+void ComposeDataset(Dataset& trainSet, Dataset& valSet, Dataset& testSet) {
+
+	trainSet.resize(NUM_TRAIN_SAMPLE);
+	valSet.resize(NUM_VAL_SAMPLE);
+	testSet.resize(NUM_TEST_SAMPLE);
+
 	string sampleImagesFile = "train-images.idx3-ubyte";
-	string sampleLabelsFile = "train-labels.idx1-ubyte"; 
+	string sampleLabelsFile = "train-labels.idx1-ubyte";
 	string testImagesFile = "t10k-images.idx3-ubyte";
 	string testLabelsFile = "t10k-labels.idx1-ubyte";
 
 	random_device rd;
 	unsigned seed = rd();
-	auto rng = default_random_engine(seed);	//TOREFACT: move to heap
+	auto rng = default_random_engine(seed);
 	uniform_int_distribution<int> uDist_train(0, MAX_TRAIN_SAMPLE - 1);
 	uniform_int_distribution<int> uDist_test(0, MAX_TEST_SAMPLE - 1);
 
@@ -88,16 +166,14 @@ int main() {
 	shuffle(samples.begin(), samples.end(), rng);
 
 	cout << "Compose training set..." << endl;
-	vector<Sample1D> trainingSet(NUM_TRAIN_SAMPLE);
-	for (auto& s : trainingSet) {
+	for (auto& s : trainSet) {
 		auto sample = samples[uDist_train(rng)];
 		s.image1D = ConvertMatToArray<Real>(sample.image);
 		s.labelOneHot[sample.label] = 1;
 	}
 
 	cout << "Compose validation set..." << endl;
-	vector<Sample1D> validationSet (NUM_VAL_SAMPLE);
-	for (auto& s : validationSet) {
+	for (auto& s : valSet) {
 		auto sample = samples[uDist_train(rng)];
 		s.image1D = ConvertMatToArray<Real>(sample.image);
 		s.labelOneHot[sample.label] = 1;
@@ -110,7 +186,6 @@ int main() {
 	shuffle(tests.begin(), tests.end(), rng);
 
 	cout << "Compose test set..." << endl;
-	vector<Sample1D> testSet(NUM_TEST_SAMPLE);
 	for (auto& s : testSet) {
 		auto sample = tests[uDist_test(rng)];
 		s.image1D = ConvertMatToArray<Real>(sample.image);
@@ -122,44 +197,11 @@ int main() {
 	cout << "Validation set: " << NUM_VAL_SAMPLE << " samples." << endl;
 	cout << "Test set: " << NUM_TEST_SAMPLE << " samples." << endl;
 	cout << endl;
+}
+void Learning(NeuralNetworkManager& netManager, vector<NetConfig_Evaluated>& networksEval,
+	const Dataset& trainSet, const Dataset& valSet) {
 
-
-/**/
-#pragma endregion
-
-#pragma region Learning
-/**/
-	//	Create and set network
-	size_t inputDim{ 28 * 28 };
-	vector<size_t> numNeurons_PerLayer(NUM_LAYERS, NUM_NEURONS_LAYER);
-	vector<AFuncType> AFunc_PerLayer(NUM_LAYERS, AFUNC_LAYER);
-	numNeurons_PerLayer.back() = NUM_CLASS;	//	Output network
-	AFunc_PerLayer.back() = AFuncType::IDENTITY;	//	To use the cross-entropy + softmax
-
-	Hyperparameters hyp{
-		inputDim,
-		numNeurons_PerLayer,
-		AFunc_PerLayer
-	};
-
-	NeuralNetworkManager& netManager = NeuralNetworkManager::GetNNManager(hyp);
-
-	//	Prepare learning
-	size_t numParams{ 0 };
-	for (const auto& layer : RangeGen(0, netManager.GetNumLayers()))
-		numParams += netManager.GetAllParam_PerLayer(layer).size1() * netManager.GetAllParam_PerLayer(layer).size2();
-
-	RPROP UpdateRule(numParams, 0.1);
-
-	vector<NetworkConfig_Evaluated> networksEval (MAX_EPOCH, {
-			netManager.GetNumLayers(),
-			netManager.GetAllNumNeurons(),
-			netManager.GetAllAFuncType()
-		});
-
-	EFuncType EType{ EFuncType::CROSSENTROPY_SOFTMAX };
-	vec_r gradE(numParams, 0);
-
+	// Tools
 	auto NetworkParams = [&netManager]()-> vector<mat_r> {
 		vector<mat_r> AllParams;
 		for (const auto& layer : RangeGen(0, netManager.GetNumLayers()))
@@ -168,16 +210,32 @@ int main() {
 		return AllParams;
 	};
 
-	//	Batch
+	// Init NetConfig
+	networksEval.resize(MAX_EPOCH, {
+		netManager.GetNumLayers(),
+		netManager.GetAllNumNeurons(),
+		netManager.GetAllAFuncType()
+		});
+
+	//	Prepare learning
+	size_t numParams{ 0 };
+	for (const auto& layer : RangeGen(0, netManager.GetNumLayers()))
+		numParams += netManager.GetAllParam_PerLayer(layer).size1() * netManager.GetAllParam_PerLayer(layer).size2();
+
+	RPROP UpdateRule(numParams, 0.1);
+	EFuncType EType{ EFuncType::CROSSENTROPY_SOFTMAX };
+	vec_r gradE(numParams, 0);
+
+	// Batch
 	cout << "Learning batch..." << endl;
 	for (const auto& epoch : RangeGen(0, MAX_EPOCH)) {
 		cout << "Epoch " << epoch << "... ";
 		networksEval[epoch].epoch = epoch;
 
 		// Set the gradient to 0
-		fill(gradE.begin(), gradE.end(), 0);	
+		fill(gradE.begin(), gradE.end(), 0);
 
-		for (const auto& sample : trainingSet) {
+		for (const auto& sample : trainSet) {
 			netManager.Run(sample.image1D);	//	FP step
 			auto gradE_sample = netManager.ComputeGradE_PerSample(EType, sample.labelOneHot); // BP step
 			gradE += gradE_sample;
@@ -185,59 +243,61 @@ int main() {
 
 		UpdateRule.Run(netManager, gradE);
 
-		networksEval[epoch].error_training = ComputeError(netManager, trainingSet, EType);
-		networksEval[epoch].error_validation = ComputeError(netManager, validationSet, EType);
+		networksEval[epoch].error_training.push_back(ComputeError(netManager, trainSet, EType));
+		networksEval[epoch].error_validation.push_back(ComputeError(netManager, valSet, EType));
 		networksEval[epoch].params = NetworkParams();
 
 		cout << "done." << endl;
 	}
 	cout << endl;
 
-	cout << "Retrieve best net... ";
-	auto cmp = [](const NetworkConfig_Evaluated& lhs, const NetworkConfig_Evaluated& rhs)-> bool {
+}
+NetConfig_Evaluated RetrieveBestNet(const vector<NetConfig_Evaluated>& networksEval, NeuralNetworkManager& netManager) {
+
+	auto cmp = [](const NetConfig_Evaluated& lhs, const NetConfig_Evaluated& rhs)-> bool {
 		return (lhs.error_validation < rhs.error_validation);
 	};
-	
-	NetworkConfig_Evaluated bestNetEval = *min_element(networksEval.begin(), networksEval.end(), cmp);
+
+	cout << "Retrieve best net... ";
+
+	NetConfig_Evaluated bestNetEval = *min_element(networksEval.begin(), networksEval.end(), cmp);
 
 	//	Rebuilding network
 	for (const auto& layer : RangeGen(0, netManager.GetNumLayers()))
 		netManager.SetAllParam_PerLayer(layer, bestNetEval.params[layer]);
 
 	cout << "done." << endl;
-/**/	
-#pragma endregion
 
-#pragma region Results
-/**/
-	vector<double> x_epoch;
-	vector<double> y_error_train;
-	vector<double> y_error_val;
+	return bestNetEval;
+}
+float Accuracy(NeuralNetworkManager& netManager, const Dataset& testSet) {
+	cout << "Compute accuracy... ";
+	size_t numCorrect{ 0 };
+	for (const auto& sample : testSet) {
+		netManager.Run(sample.image1D);
 
-	for (const auto& epoch : RangeGen(0, MAX_EPOCH)) {
-		auto net = networksEval[epoch];
-		x_epoch.push_back(net.epoch);
-		y_error_train.push_back(net.error_training);
-		y_error_val.push_back(net.error_validation);
+		//	Decision rule
+		auto out = netManager.GetNetworkOutput().data();
+		size_t predIndex = max_element(out.begin(), out.end()) - out.begin();	//max_element returns an iterator
+
+		if (sample.labelOneHot[predIndex] == 1)
+			numCorrect++;
 	}
+	float accuracy = ((float)numCorrect) / ((float)testSet.size());
+	cout << "done." << endl;
+	return accuracy;
+}
+Real ComputeError(NeuralNetworkManager& nnManager, const vector<Sample1D>& dataset, const EFuncType& Etype) {
 
-	if(SavePlot("Training error plot RELU", x_epoch, y_error_train))
-		cout << "Training error plot saved." << endl;
-	else
-		cout << "Error to save training error plot." << endl;
+	Real error{ 0 };
+	for (const auto& sample : dataset) {
+		nnManager.Run(sample.image1D);
 
-	if(SavePlot("Validation error plot RELU", x_epoch, y_error_val))
-		cout << "Validation error plot saved." << endl;
-	else
-		cout << "Error to save validation error plot." << endl;
+		mat_r columnTarget(sample.labelOneHot.size(), 1);
+		for (const auto& t : RangeGen(0, columnTarget.size1()))
+			columnTarget(t, 0) = sample.labelOneHot[t];
+		error += ErrorFunction::EFunction[Etype](nnManager.GetNetworkOutput(), columnTarget);
 
-	cout << "Best network:" << endl;
-	cout << "Epoch: " << bestNetEval.epoch << endl;
-	cout << "Training error: " << bestNetEval.error_training << endl;
-	cout << "Validation error: " << bestNetEval.error_validation << endl;
-
-	cout << endl;
-/**/
-#pragma endregion
-
+	}
+	return error / dataset.size();
 }

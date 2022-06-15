@@ -8,6 +8,9 @@ using boost::numeric::ublas::prod;
 using boost::numeric::ublas::matrix;
 using std::vector;
 using std::max_element;
+using std::transform;
+using std::back_inserter;
+using std::plus;
 
 /**
  * 
@@ -76,21 +79,6 @@ inline Real SoftMax(const mat_r& outputs, const size_t idxOutput) {
 		summation += exp(outputsNorm(h, 0));
 	Real SM = exp(outputsNorm(idxOutput, 0)) / summation;
 
-
-	/*DEBUG
-	std::cout << "Output: " << std::endl;
-	for (const auto& e : outputs.data())
-		std::cout << e << " ";
-	std::cout << std::endl; 
-
-	std::cout << "Max value:" << maxValue << std::endl;
-	std::cout << "New output" << std::endl;
-
-	for (const auto& e : outputsNorm.data())
-		std::cout << e << " ";
-	std::cout << std::endl;
-	*/
-
  	return SM;
 }
 
@@ -142,9 +130,24 @@ inline vector<T> ConvertMatToArray(const matrix<T>& mat) {
 //	Overload operator += of vector
 template <typename T>
 vector<T>& operator+=(vector<T>& vec1, const vector<T>& vec2) {
+	assert(vec1.size() == vec2.size());
+
 	for (const auto& i : RangeGen(0, vec1.size()))
 		vec1[i] = vec1[i] + vec2[i];
 	return vec1;
+}
+
+//	Overload operator + of vector
+template <typename T>
+vector<T> operator+(const std::vector<T>& vec1, const std::vector<T>& vec2) {
+	assert(vec1.size() == vec2.size());
+
+	vector<T> result;
+	result.reserve(vec1.size());
+
+	transform(vec1.begin(), vec1.end(), vec2.begin(),
+		back_inserter(result), plus<T>());
+	return result;
 }
 
 /**
