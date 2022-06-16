@@ -26,19 +26,19 @@ using std::uniform_int_distribution;
 using std::to_string;
 
 struct Sample1D {
-	vector<Real> image1D;
+	vec_r image1D;
 	vec_r labelOneHot{ vec_r(10, 0) };
 };
 
 struct NetConfig_Evaluated {
-	size_t numLayers;
+	size_t numLayers{ 0 };
 	vector<size_t> numNeurons_PerLayer;
 	vector<AFuncType> AFuncType_PerLayer;
 	vector<mat_r> params;
 
 	size_t epoch{ 0 };
-	vector<Real> error_training{ 0 };
-	vector<Real> error_validation{ 0 };
+	vec_r error_training{ 0 };
+	vec_r error_validation{ 0 };
 };
 
 typedef vector<Sample1D> Dataset;
@@ -57,7 +57,7 @@ constexpr size_t NUM_TRAIN_SAMPLE = 5000;	//Request: 5000
 constexpr size_t NUM_VAL_SAMPLE = 2500;		//Request: 2500
 constexpr size_t NUM_TEST_SAMPLE = 2500;	//Request: 2500
 constexpr size_t MAX_EPOCH = 10;
-constexpr size_t NUM_LEARNING = 3;
+constexpr size_t NUM_LEARNING = 5;
 
 constexpr AFuncType AFUNC_LAYER = AFuncType::SIGMOID;
 constexpr size_t NUM_NEURONS_LAYER = 5;
@@ -69,7 +69,14 @@ constexpr size_t NUM_CLASS = 10;
 
 int main() {
 	string testCase = NameOfAFuncType(AFUNC_LAYER) + " " + to_string(NUM_INNER_LAYERS)
-		+ " inner layers" + " " + to_string(NUM_NEURONS_LAYER) + " neurons per layer";
+		+ " inner layers" + " " + to_string(NUM_NEURONS_LAYER) + " neurons per layer " +
+		to_string(MAX_EPOCH) + " epoches";
+
+	cout << "Network with" << endl;
+	cout << "Hidden layer: " << NUM_INNER_LAYERS << endl;
+	cout << "Neurons per hidden layer: " << NUM_NEURONS_LAYER << endl;
+	cout << "Activation function: " << NameOfAFuncType(AFUNC_LAYER) << endl;
+	cout << endl;
 
 	//	Prepare network manager
 	size_t inputDim{ 28 * 28 };
@@ -84,6 +91,8 @@ int main() {
 		AFunc_PerLayer
 	};
 	NeuralNetworkManager& netManager = NeuralNetworkManager::GetNNManager(hyp);
+
+
 	//
 	
 	vector<NetConfig_Evaluated> networksEval;
@@ -93,6 +102,7 @@ int main() {
 	ComposeDataset(trainingSet, validationSet, testSet);
 
 	vector<float> accuracies;
+	vector<size_t> bestEpoches;
 	for (const auto& attempt : RangeGen(0, NUM_LEARNING)) {
 		cout << "ATTEMPT " << attempt+1 << endl;
 		netManager.RandomInitialization(0, 1);
@@ -100,12 +110,16 @@ int main() {
 		Learning(netManager, networksEval, trainingSet, validationSet, MAX_EPOCH);
 		bestNetEval = RetrieveBestNet(networksEval, netManager);
 		accuracies.push_back(Accuracy(netManager, testSet));
-		
+		bestEpoches.push_back(bestNetEval.epoch);
 		cout << endl;
 	}
 	float avgAcc = accumulate(accuracies.begin(), accuracies.end(), (float)0) / NUM_LEARNING;
-	auto minmax = std::minmax_element(accuracies.begin(), accuracies.end());
+	auto minmax = minmax_element(accuracies.begin(), accuracies.end());
 	float range =  (*minmax.second - *minmax.first)/2;
+
+	size_t avgBestEpoch = accumulate(bestEpoches.begin(), bestEpoches.end(), (size_t)0) / NUM_LEARNING;
+	auto minmaxBestEpoch = minmax_element(bestEpoches.begin(), bestEpoches.end());
+	size_t rangeBestEpoch = (*minmaxBestEpoch.second - *minmaxBestEpoch.first) / 2;
 
 	// Results
 	vector<double> x_epoch;
@@ -133,8 +147,9 @@ int main() {
 		cout << "Error to save validation error plot." << endl;
 	cout << endl;
 
-	cout << "Best network with:" << endl;
-	cout << "Epoch: " << bestNetEval.epoch << endl;
+	cout << "Best network with" << endl;
+	cout << "Epoch: " << avgBestEpoch+1 << " +- " << rangeBestEpoch << " on " << MAX_EPOCH << endl;
+	cout << "Validation error: " << *max_element(bestNetEval.error_validation.begin(), bestNetEval.error_validation.end()) << endl;
 	cout << "Accuracy: (" << avgAcc * 100 << " +- " << range * 100 << ")%" << endl;
 	cout << endl;
 }
@@ -185,9 +200,9 @@ void ComposeDataset(Dataset& trainSet, Dataset& valSet, Dataset& testSet) {
 	}
 	tests.clear(); // Free memory
 
-	cout << "Training set: " << NUM_TRAIN_SAMPLE << " samples." << endl;
-	cout << "Validation set: " << NUM_VAL_SAMPLE << " samples." << endl;
-	cout << "Test set: " << NUM_TEST_SAMPLE << " samples." << endl;
+	cout << "Training set: " << trainSet.size() << " samples." << endl;
+	cout << "Validation set: " << valSet.size() << " samples." << endl;
+	cout << "Test set: " << testSet.size() << " samples." << endl;
 	cout << endl;
 }
 void Learning(NeuralNetworkManager& netManager, vector<NetConfig_Evaluated>& networksEval,
@@ -221,7 +236,7 @@ void Learning(NeuralNetworkManager& netManager, vector<NetConfig_Evaluated>& net
 	// Batch
 	cout << "Learning batch..." << endl;
 	for (const auto& epoch : RangeGen(0, maxEpoch)) {
-		cout << "Epoch " << epoch << "... ";
+		cout << "Epoch " << epoch+1 << "... ";
 		networksEval[epoch].epoch = epoch;
 
 		// Set the gradient to 0
@@ -247,7 +262,10 @@ void Learning(NeuralNetworkManager& netManager, vector<NetConfig_Evaluated>& net
 NetConfig_Evaluated RetrieveBestNet(const vector<NetConfig_Evaluated>& networksEval, NeuralNetworkManager& netManager) {
 
 	auto cmp = [](const NetConfig_Evaluated& lhs, const NetConfig_Evaluated& rhs)-> bool {
-		return (lhs.error_validation < rhs.error_validation);
+		auto maxErrorLhs = *max_element(lhs.error_validation.begin(), lhs.error_validation.end());
+		auto maxErrorRhs = *max_element(rhs.error_validation.begin(), rhs.error_validation.end());
+
+		return (maxErrorLhs < maxErrorRhs);
 	};
 
 	cout << "Retrieve best net... ";
