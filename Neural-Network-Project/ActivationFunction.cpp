@@ -57,9 +57,8 @@ Real ActivationFunction::_sigmoid_Der(const Real input) {
 
 Real ActivationFunction::_relu_Der(const Real input) {
 
-	Real zero{ 0 };
-	if (input <= zero)
-		return zero;
+	if (input <= (Real)0)
+		return (Real)0;
 	else
 		return (Real)1;
 }

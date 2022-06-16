@@ -56,12 +56,12 @@ NetConfig_Evaluated RetrieveBestNet(const vector<NetConfig_Evaluated>&, NeuralNe
 constexpr size_t NUM_TRAIN_SAMPLE = 5000;	//Request: 5000
 constexpr size_t NUM_VAL_SAMPLE = 2500;		//Request: 2500
 constexpr size_t NUM_TEST_SAMPLE = 2500;	//Request: 2500
-constexpr size_t MAX_EPOCH = 10;
-constexpr size_t NUM_LEARNING = 5;
+constexpr size_t MAX_EPOCH = 100;
+constexpr size_t NUM_LEARNING = 3;
 
 constexpr AFuncType AFUNC_LAYER = AFuncType::SIGMOID;
 constexpr size_t NUM_NEURONS_LAYER = 5;
-constexpr size_t NUM_INNER_LAYERS = 1;
+constexpr size_t NUM_INNER_LAYERS = 2;
 
 constexpr size_t NUM_CLASS = 10;
  
@@ -128,12 +128,13 @@ int main() {
 
 	for (const auto& epoch : RangeGen(0, MAX_EPOCH)) {
 		auto net = networksEval[epoch];
-		float avgErrorTrain = accumulate(net.error_training.begin(), net.error_training.end(), (float)0) / NUM_LEARNING;
-		float avgErrorVal = accumulate(net.error_validation.begin(), net.error_validation.end(), (float)0) / NUM_LEARNING;
+
+		float maxErrorTrain = *max_element(net.error_training.begin(), net.error_training.end());
+		float maxErrorVal = *max_element(net.error_validation.begin(), net.error_validation.end());
 
 		x_epoch.push_back(net.epoch);
-		y_error_train.push_back(avgErrorTrain);
-		y_error_val.push_back(avgErrorVal);
+		y_error_train.push_back(maxErrorTrain);
+		y_error_val.push_back(maxErrorVal);
 	}
 
 	if(SavePlot("Training error "+ testCase, x_epoch, y_error_train))
@@ -148,7 +149,7 @@ int main() {
 	cout << endl;
 
 	cout << "Best network with" << endl;
-	cout << "Epoch: " << avgBestEpoch+1 << " +- " << rangeBestEpoch << " on " << MAX_EPOCH << endl;
+	cout << "Epoch: " << avgBestEpoch << " +- " << rangeBestEpoch << " on " << MAX_EPOCH << endl;
 	cout << "Validation error: " << *max_element(bestNetEval.error_validation.begin(), bestNetEval.error_validation.end()) << endl;
 	cout << "Accuracy: (" << avgAcc * 100 << " +- " << range * 100 << ")%" << endl;
 	cout << endl;
