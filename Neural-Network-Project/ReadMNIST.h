@@ -30,3 +30,15 @@ struct ImageLabeled {
  * \return	a vector with sample data structures.
  */
 vector<ImageLabeled> ReadSample(const string& imagesPath, const string& labelsPath, const size_t numSamples);
+
+/**
+ * This function retrievs the min and max value from a collection of ImageLabeled.
+ * 
+ * \param	dataset is the collection of ImageLabeled
+ * \return	a vector of two elements: the first is the min, the second is the max.
+ */
+vector<uint8_t> RetrieveMinMaxFromDatasetRaw(const vector<ImageLabeled>& dataset);
+
+
+
+

@@ -21,10 +21,10 @@ private:
 	vec_r _oldGradE;
 	vec_r _updateValue;
 	vec_r _delta;
-	Real _updateMax{ 50 };
-	Real _updateMin{ 1e-6 };
-	Real _etaMinus{ 0.5 };
-	Real _etaPlus{ 1.2 };
+	Real _updateMax{ (Real)50 };
+	Real _updateMin{ (Real)1e-6 };
+	Real _etaMinus{ (Real)0.5 };
+	Real _etaPlus{ (Real)1.2 };
 
 };
 

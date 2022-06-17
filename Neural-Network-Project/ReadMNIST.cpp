@@ -87,3 +87,26 @@ vector<ImageLabeled> ReadSample(const string& imagesPath, const string& labelsPa
 
 	return samples;
 }
+
+vector<uint8_t> RetrieveMinMaxFromDatasetRaw(const vector<ImageLabeled>& dataset) {
+	vector<uint8_t> minmax(2);
+
+	vector<uint8_t> arrMax;
+	vector<uint8_t> arrMin;
+
+	for (const auto& s : dataset) {
+		uint8_t sampleMax = *max_element(s.image.data().begin(), s.image.data().end());
+		uint8_t sampleMin = *min_element(s.image.data().begin(), s.image.data().end());
+
+		arrMax.push_back(sampleMax);
+		arrMin.push_back(sampleMin);
+	}
+
+	uint8_t min = *min_element(arrMin.begin(), arrMin.end());
+	uint8_t max = *max_element(arrMax.begin(), arrMax.end());
+
+	minmax[0] = min;
+	minmax[1] = max;
+
+	return minmax;
+}

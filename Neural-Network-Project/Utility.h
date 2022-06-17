@@ -8,6 +8,7 @@ using boost::numeric::ublas::prod;
 using boost::numeric::ublas::matrix;
 using std::vector;
 using std::max_element;
+using std::min_element;
 using std::transform;
 using std::back_inserter;
 using std::plus;
@@ -130,14 +131,17 @@ inline vector<T> ConvertMatToArray(const matrix<T>& mat) {
 /**
  * This function is used to normalize a vector in [0, 1].
  * 
- * \param vec
+ * \param vec is the vector to normalize.
+ * \param max value for normalization.
+ * \param min value for normalization.
  * \return A vector of the same type but normalized.
  */
 template <typename T>
-inline vector<T> NormalizeVector(const vector<T> vec) {
+inline vector<T> NormalizeVector(const vector<T> vec, T max, T min) {
 	vector<T> arrNorm;
+
 	for (const auto& e : vec)
-		arrNorm.push_back(e / vec.size());
+		arrNorm.push_back((e-min) / (max - min));
 	return arrNorm;
 }
 

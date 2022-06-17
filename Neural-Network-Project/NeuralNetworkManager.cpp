@@ -89,6 +89,7 @@ mat_r NeuralNetworkManager::GetAllParam_PerLayer(const size_t layer) {
 	}
 	catch (InvalidParametersException e) {
 		std::cout << e.getErrorMessage() << std::endl;
+		return mat_r();
 	}
 }
 
