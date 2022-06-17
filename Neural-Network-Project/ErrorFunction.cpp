@@ -61,7 +61,7 @@ Real ErrorFunction::_sumOfSquares(const mat_r& NNOutput, const mat_r& targets) {
 		
 	Real error{ 0 };
 	for (const auto& k : RangeGen (0, NNOutput.size1()))
-		error += pow(NNOutput(k,0) - targets(k,0), 2);
+		error += (Real)pow(NNOutput(k,0) - targets(k,0), 2);
 
 	return error/2;
 }

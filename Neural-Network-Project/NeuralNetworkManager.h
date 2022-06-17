@@ -47,7 +47,7 @@ public:
 	 * \return	A vector cointaining the partial derivatives of the error function.
 	 */
 	vec_r ComputeGradE_PerSample(const EFuncType EType, const vec_r& target)
-		throw (InvalidParametersException);
+		noexcept(false);
 
 	/**
 	 *	This function initializes the neural network's parameteres with random value.

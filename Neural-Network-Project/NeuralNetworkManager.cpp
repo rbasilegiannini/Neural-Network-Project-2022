@@ -18,7 +18,7 @@ void NeuralNetworkManager::Run(const vec_r& input) {
 }
 
 vec_r NeuralNetworkManager::ComputeGradE_PerSample(const EFuncType EFuncType, const vec_r& target)
-throw (InvalidParametersException) {
+noexcept(false) {
 	if (_netResult.activationsPerLayer.empty())
 		throw InvalidParametersException("[MANAGER] it's mandatory to perform a forward propagation step first.");
 

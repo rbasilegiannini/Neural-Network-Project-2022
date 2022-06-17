@@ -1,7 +1,7 @@
 #include "BackPropagation.h"
 
 vec_r BackPropagation(const DataFromNetwork& dataNN, const EFuncType EType, const mat_r& target)
-throw (InvalidParametersException) {
+noexcept(false) {
 
 	auto nLayers = dataNN.numLayers;
 	auto AFuncLayer = dataNN.AFunctionDerivativePerLayer;

@@ -41,10 +41,10 @@ typedef vector<Real> vec_r;
  * \param	last is the last element of the range (not included).
  * \return	a vector with the range.
  */
-inline vector<int> RangeGen(const int first, const int last) {
-	int size = abs(last - first);
-	vector<int> range(size);
-	int idx{ first };
+inline vector<long long int> RangeGen(const long long int first, const long long int last) {
+	long long int size = abs(last - first);
+	vector<long long int> range(size);
+	long long int idx{ first };
 
 	if (last > first) {
 		for (auto& value : range)

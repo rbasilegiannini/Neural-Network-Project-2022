@@ -158,7 +158,7 @@ int main() {
 
 	for (const auto& net : networksEval) {
 
-		x_epoch.push_back(net.epoch);
+		x_epoch.push_back((double)net.epoch);
 		y_error_train.push_back(net.error_training);
 		y_error_val.push_back(net.error_validation);
 	}
@@ -264,61 +264,70 @@ void Learning(NeuralNetworkManager& netManager, vector<NetConfig_Evaluated>& net
 		return AllParams;
 	};
 
-	//	Prepare learning
-	size_t numParams{ 0 };
-	for (const auto& layer : RangeGen(0, netManager.GetNumLayers()))
-		numParams += netManager.GetAllParam_PerLayer(layer).size1() * netManager.GetAllParam_PerLayer(layer).size2();
+	try {
 
-	RPROP UpdateRule(numParams, (Real)0.1);
-	EFuncType EType{ EFuncType::CROSSENTROPY_SOFTMAX };
-	vec_r gradE(numParams, 0);
+		//	Prepare learning
+		size_t numParams{ 0 };
+		for (const auto& layer : RangeGen(0, netManager.GetNumLayers()))
+			numParams += netManager.GetAllParam_PerLayer(layer).size1() * netManager.GetAllParam_PerLayer(layer).size2();
 
-	// Batch
-	Real oldEVal{ std::numeric_limits<float>::max() };
-	size_t pat{ 0 };
-	cout << "Learning batch..." << endl;
-	for (const auto& epoch : RangeGen(0, maxEpoch)) {
-		cout << "Epoch " << epoch+1 << "... ";
+		RPROP UpdateRule(numParams, (Real)0.1);
+		EFuncType EType{ EFuncType::CROSSENTROPY_SOFTMAX };
+		vec_r gradE(numParams, 0);
 
-		// Set the gradient to 0
-		fill(gradE.begin(), gradE.end(), 0);
+		// Batch
+		Real oldEVal{ std::numeric_limits<float>::max() };
+		size_t pat{ 0 };
+		cout << "Learning batch..." << endl;
 
-		for (const auto& sample : trainSet) {
-			netManager.Run(sample.image1D);	//	FP step
-			auto gradE_sample = netManager.ComputeGradE_PerSample(EType, sample.labelOneHot); // BP step
-			gradE += gradE_sample;
+		for (const auto& epoch : RangeGen(0, maxEpoch)) {
+			cout << "Epoch " << epoch + 1 << "... ";
+
+			// Set the gradient to 0
+			fill(gradE.begin(), gradE.end(), 0);
+
+			for (const auto& sample : trainSet) {
+				netManager.Run(sample.image1D);	//	FP step
+				auto gradE_sample = netManager.ComputeGradE_PerSample(EType, sample.labelOneHot); // BP step
+				gradE += gradE_sample;
+			}
+
+			UpdateRule.Run(netManager, gradE);
+
+			auto eVal = ComputeError(netManager, valSet, EType);
+			auto eTrain = ComputeError(netManager, trainSet, EType);
+
+			NetConfig_Evaluated netEval{
+				netManager.GetNumLayers(),
+				netManager.GetAllNumNeurons(),
+				netManager.GetAllAFuncType(),
+				NetworkParams(),
+				(size_t)epoch,
+				eTrain,
+				eVal
+			};
+
+			networksEval.push_back(netEval);
+
+			cout << "done." << endl;
+
+			//	Early stopping
+			if ((abs(eVal - oldEVal) < SENSITIVITY) || eVal > oldEVal)
+				pat++;
+			else
+				pat = 0;
+
+			if (pat == PATIENCE)
+				break;
+
+			oldEVal = eVal;
 		}
-
-		UpdateRule.Run(netManager, gradE);
-	
-		auto eVal = ComputeError(netManager, valSet, EType);
-		auto eTrain = ComputeError(netManager, trainSet, EType);
-
-		NetConfig_Evaluated netEval{
-			netManager.GetNumLayers(),
-			netManager.GetAllNumNeurons(),
-			netManager.GetAllAFuncType(),
-			NetworkParams(),
-			(size_t)epoch,
-			eTrain,
-			eVal
-		};
-
-		networksEval.push_back(netEval);
-
-		cout << "done." << endl;
-
-		//	Early stopping
-		if ( (abs(eVal - oldEVal) < SENSITIVITY) || eVal > oldEVal)
-			pat++;
-		else
-			pat = 0;
-
-		if (pat == PATIENCE)
-			break;
-
-		oldEVal = eVal;
 	}
+
+	catch (InvalidParametersException e) {
+		cout << e.getErrorMessage() << endl;
+	}
+
 	cout << endl;
 
 }
