@@ -3,6 +3,14 @@
 #include <fstream>
 #include <exception>
 
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+using cv::Mat;
+using cv::imshow;
+using cv::resize;
+using std::array;
+
 vector<ImageLabeled> ReadSample(const string& imagesPath, const string& labelsPath, const size_t numSamples) {
 
 	auto reverseInt = [](int32_t toReverse) {
@@ -109,4 +117,40 @@ vector<uint8_t> RetrieveMinMaxFromDatasetRaw(const vector<ImageLabeled>& dataset
 	minmax[1] = max;
 
 	return minmax;
+}
+
+void ResizeDatasetRaw (vector<ImageLabeled>& dataset, double factor) {
+	
+	for (auto& sample : dataset) {
+
+		mat_i& imageSample = sample.image;	// It's a reference
+
+		//	Build an image for OpenCV tools
+		array<array<uint8_t, 28>, 28> imageRaw;
+		for (const auto& row : RangeGen(0, imageSample.size1())) {
+		
+			array<uint8_t, 28> image_row;
+			for (const auto& col : RangeGen(0, imageSample.size2())) 
+				image_row[col] = imageSample(row, col);
+
+			imageRaw[row] = image_row;
+		}
+
+		Mat image(28, 28, CV_8UC1, &imageRaw);
+
+		//	Resize image 
+		Mat imageResized;
+		resize(image, imageResized, cv::Size(), factor, factor);
+
+		//	Resize the matrix
+		auto oldRows = imageSample.size1();
+		auto oldCols = imageSample.size2();
+		imageSample.resize(factor *oldRows, factor *oldCols);
+
+		for (const auto& row : RangeGen(0, imageSample.size1())) {
+			for (const auto& col : RangeGen(0, imageSample.size2())) {
+				imageSample(row, col) = imageResized.at<uint8_t>(row, col);
+			}
+		}
+	}
 }

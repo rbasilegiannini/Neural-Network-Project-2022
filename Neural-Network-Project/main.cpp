@@ -5,7 +5,6 @@
 #include "RPROP.h"
 #include "ReadMNIST.h"
 #include "AnalysisTools.h"
-
 #include <array>
 #include <algorithm>
 #include <random>
@@ -42,7 +41,7 @@ struct NetConfig_Evaluated {
 	Real error_validation{ 0 };
 };
 
-void ComposeDataset(Dataset&, Dataset&, Dataset&);
+void ComposeDataset(Dataset&, Dataset&, Dataset&, const double);
 void Learning(NeuralNetworkManager&, vector<NetConfig_Evaluated>&, const Dataset&, const Dataset&, const size_t maxEpoch);
 float Accuracy(NeuralNetworkManager&, const Dataset&);
 Real ComputeError(NeuralNetworkManager&, const vector<Sample1D>&, const EFuncType&);
@@ -58,8 +57,11 @@ constexpr size_t NUM_TEST_SAMPLE = 2500;	//Request: 2500
 constexpr size_t MAX_EPOCH = 500;
 
 constexpr AFuncType AFUNC_LAYER = AFuncType::SIGMOID;
-/*constexpr*/ size_t NUM_NEURONS_LAYER = 10;
-/*constexpr*/ size_t NUM_INNER_LAYERS = 2;
+/*constexpr*/ size_t NUM_NEURONS_INPUT = 2;
+/*constexpr*/ size_t NUM_NEURONS_HIDDEN = 10;
+/*constexpr*/ size_t NUM_HIDDEN_LAYERS = 2;
+
+
 
 constexpr size_t NUM_CLASS = 10;
 constexpr size_t PATIENCE = 20;
@@ -68,47 +70,229 @@ constexpr float SENSITIVITY = (float)0.005;
 #pragma endregion
 
 int main() {
+
+/**/
 	//DEBUG
 	size_t counter{ 0 };
-	for (const auto& i : RangeGen(0, 9)) {
+	for (const auto& i : RangeGen(0, 18)) {
 		switch (i)
 		{
 		case 0:
-			NUM_NEURONS_LAYER = 1;
-			NUM_INNER_LAYERS = 1;
+			NUM_NEURONS_INPUT = 5;
+			NUM_NEURONS_HIDDEN = 5;
+			NUM_HIDDEN_LAYERS = 1;
 			break;
 		case 1:
-			NUM_NEURONS_LAYER = 1;
-			NUM_INNER_LAYERS = 1;
+			NUM_NEURONS_INPUT = 5;
+			NUM_NEURONS_HIDDEN = 5;
+			NUM_HIDDEN_LAYERS = 1;
 			break;
 		case 2:
-			NUM_NEURONS_LAYER = 1;
-			NUM_INNER_LAYERS = 1;
+			NUM_NEURONS_INPUT = 5;
+			NUM_NEURONS_HIDDEN = 5;
+			NUM_HIDDEN_LAYERS = 1;
 			break;
+
 		case 3:
-			NUM_NEURONS_LAYER = 10;
-			NUM_INNER_LAYERS = 1;
+			NUM_NEURONS_INPUT = 10;
+			NUM_NEURONS_HIDDEN = 10;
+			NUM_HIDDEN_LAYERS = 1;
 			break;
 		case 4:
-			NUM_NEURONS_LAYER = 10;
-			NUM_INNER_LAYERS = 1;
+			NUM_NEURONS_INPUT = 10;
+			NUM_NEURONS_HIDDEN = 10;
+			NUM_HIDDEN_LAYERS = 1;
 			break;
 		case 5:
-			NUM_NEURONS_LAYER = 10;
-			NUM_INNER_LAYERS = 1;
+			NUM_NEURONS_INPUT = 10;
+			NUM_NEURONS_HIDDEN = 10;
+			NUM_HIDDEN_LAYERS = 1;
 			break;
+
 		case 6:
-			NUM_NEURONS_LAYER = 20;
-			NUM_INNER_LAYERS = 1;
+			NUM_NEURONS_INPUT = 20;
+			NUM_NEURONS_HIDDEN = 20;
+			NUM_HIDDEN_LAYERS = 1;
 			break;
 		case 7:
-			NUM_NEURONS_LAYER = 20;
-			NUM_INNER_LAYERS = 1;
+			NUM_NEURONS_INPUT = 20;
+			NUM_NEURONS_HIDDEN = 20;
+			NUM_HIDDEN_LAYERS = 1;
 			break;
 		case 8:
-			NUM_NEURONS_LAYER = 20;
-			NUM_INNER_LAYERS = 1;
+			NUM_NEURONS_INPUT = 20;
+			NUM_NEURONS_HIDDEN = 20;
+			NUM_HIDDEN_LAYERS = 1;
 			break;
+
+		case 9:
+			NUM_NEURONS_INPUT = 50;
+			NUM_NEURONS_HIDDEN = 50;
+			NUM_HIDDEN_LAYERS = 1;
+			break;
+		case 10:
+			NUM_NEURONS_INPUT = 50;
+			NUM_NEURONS_HIDDEN = 50;
+			NUM_HIDDEN_LAYERS = 1;
+			break;
+		case 11:
+			NUM_NEURONS_INPUT = 50;
+			NUM_NEURONS_HIDDEN = 50;
+			NUM_HIDDEN_LAYERS = 1;
+			break;
+
+		case 12:
+			NUM_NEURONS_INPUT = 100;
+			NUM_NEURONS_HIDDEN = 100;
+			NUM_HIDDEN_LAYERS = 1;
+			break;
+		case 13:
+			NUM_NEURONS_INPUT = 100;
+			NUM_NEURONS_HIDDEN = 100;
+			NUM_HIDDEN_LAYERS = 1;
+			break;
+		case 14:
+			NUM_NEURONS_INPUT = 100;
+			NUM_NEURONS_HIDDEN = 100;
+			NUM_HIDDEN_LAYERS = 1;
+			break;
+
+		case 15:
+			NUM_NEURONS_INPUT = 200;
+			NUM_NEURONS_HIDDEN = 200;
+			NUM_HIDDEN_LAYERS = 1;
+			break;
+		case 16:
+			NUM_NEURONS_INPUT = 200;
+			NUM_NEURONS_HIDDEN = 200;
+			NUM_HIDDEN_LAYERS = 1;
+			break;
+		case 17:
+			NUM_NEURONS_INPUT = 200;
+			NUM_NEURONS_HIDDEN = 200;
+			NUM_HIDDEN_LAYERS = 1;
+			break;
+
+		case 18:
+			NUM_NEURONS_INPUT = 500;
+			NUM_NEURONS_HIDDEN = 500;
+			NUM_HIDDEN_LAYERS = 1;
+			break;
+		case 19:
+			NUM_NEURONS_INPUT = 500;
+			NUM_NEURONS_HIDDEN = 500;
+			NUM_HIDDEN_LAYERS = 1;
+			break;
+		case 20:
+			NUM_NEURONS_INPUT = 500;
+			NUM_NEURONS_HIDDEN = 500;
+			NUM_HIDDEN_LAYERS = 1;
+			break;
+
+		case 21:
+			NUM_NEURONS_HIDDEN = 10;
+			NUM_HIDDEN_LAYERS = 3;
+			break;
+		case 22:
+			NUM_NEURONS_HIDDEN = 10;
+			NUM_HIDDEN_LAYERS = 3;
+			break;
+		case 23:
+			NUM_NEURONS_HIDDEN = 10;
+			NUM_HIDDEN_LAYERS = 3;
+			break;
+
+		case 24:
+			NUM_NEURONS_HIDDEN = 20;
+			NUM_HIDDEN_LAYERS = 3;
+			break;
+		case 25:
+			NUM_NEURONS_HIDDEN = 20;
+			NUM_HIDDEN_LAYERS = 3;
+			break;
+		case 26:
+			NUM_NEURONS_HIDDEN = 20;
+			NUM_HIDDEN_LAYERS = 3;
+			break;
+
+		case 27:
+			NUM_NEURONS_HIDDEN = 5;
+			NUM_HIDDEN_LAYERS = 4;
+			break;
+		case 28:
+			NUM_NEURONS_HIDDEN = 5;
+			NUM_HIDDEN_LAYERS = 4;
+			break;
+		case 29:
+			NUM_NEURONS_HIDDEN = 5;
+			NUM_HIDDEN_LAYERS = 4;
+			break;
+
+		case 30:
+			NUM_NEURONS_HIDDEN = 10;
+			NUM_HIDDEN_LAYERS = 4;
+			break;
+		case 31:
+			NUM_NEURONS_HIDDEN = 10;
+			NUM_HIDDEN_LAYERS = 4;
+			break;
+		case 32:
+			NUM_NEURONS_HIDDEN = 10;
+			NUM_HIDDEN_LAYERS = 4;
+			break;
+
+		case 33:
+			NUM_NEURONS_HIDDEN = 20;
+			NUM_HIDDEN_LAYERS = 4;
+			break;
+		case 34:
+			NUM_NEURONS_HIDDEN = 20;
+			NUM_HIDDEN_LAYERS = 4;
+			break;
+		case 35:
+			NUM_NEURONS_HIDDEN = 20;
+			NUM_HIDDEN_LAYERS = 4;
+			break;
+
+		case 36:
+			NUM_NEURONS_HIDDEN = 5;
+			NUM_HIDDEN_LAYERS = 5;
+			break;
+		case 37:
+			NUM_NEURONS_HIDDEN = 5;
+			NUM_HIDDEN_LAYERS = 5;
+			break;
+		case 38:
+			NUM_NEURONS_HIDDEN = 5;
+			NUM_HIDDEN_LAYERS = 5;
+			break;
+
+		case 39:
+			NUM_NEURONS_HIDDEN = 10;
+			NUM_HIDDEN_LAYERS = 5;
+			break;
+		case 40:
+			NUM_NEURONS_HIDDEN = 10;
+			NUM_HIDDEN_LAYERS = 5;
+			break;
+		case 41:
+			NUM_NEURONS_HIDDEN = 10;
+			NUM_HIDDEN_LAYERS = 5;
+			break;
+
+		case 42:
+			NUM_NEURONS_HIDDEN = 20;
+			NUM_HIDDEN_LAYERS = 5;
+			break;
+		case 43:
+			NUM_NEURONS_HIDDEN = 20;
+			NUM_HIDDEN_LAYERS = 5;
+			break;
+		case 44:
+			NUM_NEURONS_HIDDEN = 20;
+			NUM_HIDDEN_LAYERS = 5;
+			break;
+
 		default:
 			break;
 		}
@@ -116,33 +300,36 @@ int main() {
 
 	//
 
-	cout << "Network with" << endl;
-	cout << "Hidden layer: " << NUM_INNER_LAYERS << endl;
-	cout << "Neurons per hidden layer: " << NUM_NEURONS_LAYER << endl;
-	cout << "Activation function: " << NameOfAFuncType(AFUNC_LAYER) << endl;
-	cout << endl;
-
 	//	Prepare network manager
-	size_t inputDim{ 28 * 28 };
-	vector<size_t> numNeurons_PerLayer(NUM_INNER_LAYERS+1, NUM_NEURONS_LAYER);
-	vector<AFuncType> AFunc_PerLayer(NUM_INNER_LAYERS+1, AFUNC_LAYER);
+	double resizeFactor{ 0.5 };
+	size_t inputDim{ size_t (resizeFactor*28 * resizeFactor*28) };
+	vector<size_t> numNeurons_PerLayer(NUM_HIDDEN_LAYERS+1, NUM_NEURONS_HIDDEN);
+	vector<AFuncType> AFunc_PerLayer(NUM_HIDDEN_LAYERS+1, AFUNC_LAYER);
 
 	numNeurons_PerLayer.back() = NUM_CLASS; // Output network
+	numNeurons_PerLayer.front() = NUM_NEURONS_INPUT;
+
 	AFunc_PerLayer.back() = AFuncType::IDENTITY; // To use the cross-entropy + softmax
 	Hyperparameters hyp{
 		inputDim,
 		numNeurons_PerLayer,
 		AFunc_PerLayer
 	};
-	NeuralNetworkManager& netManager = NeuralNetworkManager::GetNNManager(hyp);
 
+	NeuralNetworkManager& netManager = NeuralNetworkManager::GetNNManager(hyp);
+	cout << "Network with" << endl;
+	cout << "Hidden layer: " << netManager.GetNumLayers()-1 << endl;
+	cout << "Neurons in input layer: " << NUM_NEURONS_INPUT << endl;
+	cout << "Neurons per hidden layer: " << NUM_NEURONS_HIDDEN << endl;
+	cout << "Activation function: " << NameOfAFuncType(AFUNC_LAYER) << endl;
+	cout << endl;
 	//
 	
 	vector<NetConfig_Evaluated> networksEval;
 	NetConfig_Evaluated bestNetEval;
 	Dataset trainingSet, validationSet, testSet;
 
-	ComposeDataset(trainingSet, validationSet, testSet);
+	ComposeDataset(trainingSet, validationSet, testSet, resizeFactor);
 
 	netManager.RandomInitialization(0, 1);
 	Learning(netManager, networksEval, trainingSet, validationSet, MAX_EPOCH);
@@ -163,8 +350,8 @@ int main() {
 		y_error_val.push_back(net.error_validation);
 	}
 
-	string testCase = NameOfAFuncType(AFUNC_LAYER) + " " + to_string(NUM_INNER_LAYERS)
-		+ " HL "+ to_string(NUM_NEURONS_LAYER) + " neur per HL " +
+	string testCase = NameOfAFuncType(AFUNC_LAYER) + " " + to_string(NUM_HIDDEN_LAYERS)
+		+ " HL "+ to_string(NUM_NEURONS_HIDDEN) + " neur per HL " +
 		to_string(x_epoch.size()) + " epoches " + to_string(counter);
 
 	if(SavePlot("Plot ET "+ testCase, x_epoch, y_error_train))
@@ -188,17 +375,17 @@ int main() {
 
 	// TESTING
 	std::ofstream myfile;
-	myfile.open("acc" + to_string(counter) + " " +to_string(NUM_INNER_LAYERS)+"x"+to_string(NUM_NEURONS_LAYER)+ ".txt");
+	myfile.open("acc" + to_string(counter) + " " +to_string(NUM_HIDDEN_LAYERS)+"x"+to_string(NUM_NEURONS_HIDDEN)+ ".txt");
 	myfile << "Epoch: " << bestNetEval.epoch <<
 		" Accuracy: " << accuracy * 100 << "%";
 	myfile.close();
 	counter++;
 }
+/**/
 }
-
 // Body
 
-void ComposeDataset(Dataset& trainSet, Dataset& valSet, Dataset& testSet) {
+void ComposeDataset(Dataset& trainSet, Dataset& valSet, Dataset& testSet, const double factor) {
 
 	trainSet.resize(NUM_TRAIN_SAMPLE);
 	valSet.resize(NUM_VAL_SAMPLE);
@@ -209,9 +396,12 @@ void ComposeDataset(Dataset& trainSet, Dataset& valSet, Dataset& testSet) {
 	string testImagesFile = "t10k-images.idx3-ubyte";
 	string testLabelsFile = "t10k-labels.idx1-ubyte";
 
-	//	Training Set and Validation Set
+
+	//	Read and resize Training Set and Validation Set
 	cout << "Read training samples..." << endl;
 	vector<ImageLabeled> samples = ReadSample(sampleImagesFile, sampleLabelsFile, NUM_TRAIN_SAMPLE + NUM_VAL_SAMPLE);
+	ResizeDatasetRaw(samples, factor);
+
 
 	//	Retrieve max and min from known samples. These values will be use also for test set. 
 	vector<uint8_t> minmaxFromSamples = RetrieveMinMaxFromDatasetRaw(samples);
@@ -235,9 +425,10 @@ void ComposeDataset(Dataset& trainSet, Dataset& valSet, Dataset& testSet) {
 	}
 	samples.clear(); // Free memory
 
-	//	Test Set
+	//	Read and resize Test Set
 	cout << "Read test samples..." << endl;
 	vector<ImageLabeled> tests = ReadSample(testImagesFile, testLabelsFile, NUM_TEST_SAMPLE);
+	ResizeDatasetRaw(tests, factor);
 
 	cout << "Compose test set..." << endl;
 	for (const auto& i : RangeGen(0, NUM_TEST_SAMPLE)) {
@@ -309,8 +500,6 @@ void Learning(NeuralNetworkManager& netManager, vector<NetConfig_Evaluated>& net
 
 			networksEval.push_back(netEval);
 
-			cout << "done." << endl;
-
 			//	Early stopping
 			if ((abs(eVal - oldEVal) < SENSITIVITY) || eVal > oldEVal)
 				pat++;
@@ -321,6 +510,8 @@ void Learning(NeuralNetworkManager& netManager, vector<NetConfig_Evaluated>& net
 				break;
 
 			oldEVal = eVal;
+
+			cout << "done. Patience: " << pat << "/" << PATIENCE << endl;
 		}
 	}
 

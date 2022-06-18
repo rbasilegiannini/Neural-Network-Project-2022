@@ -39,6 +39,15 @@ vector<ImageLabeled> ReadSample(const string& imagesPath, const string& labelsPa
  */
 vector<uint8_t> RetrieveMinMaxFromDatasetRaw(const vector<ImageLabeled>& dataset);
 
+/**
+ * This function is used to resize the samples using OpenCV.
+ * 
+ * \param	dataset is the dataset with the raw samples.
+ * \param	factor is the factor of resizing.
+ * .
+ */
+void ResizeDatasetRaw(vector<ImageLabeled>& dataset, double factor);
+
 
 
 
