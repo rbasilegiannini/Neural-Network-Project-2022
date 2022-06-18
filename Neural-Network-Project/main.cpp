@@ -61,10 +61,10 @@ constexpr AFuncType AFUNC_LAYER = AFuncType::SIGMOID;
 /*constexpr*/ size_t NUM_NEURONS_HIDDEN = 10;
 /*constexpr*/ size_t NUM_HIDDEN_LAYERS = 2;
 
-
-
 constexpr size_t NUM_CLASS = 10;
 constexpr size_t PATIENCE = 20;
+
+#define EARLY_STOPPING
 constexpr float SENSITIVITY = (float)0.005;
 
 #pragma endregion
@@ -500,9 +500,11 @@ void Learning(NeuralNetworkManager& netManager, vector<NetConfig_Evaluated>& net
 
 			networksEval.push_back(netEval);
 
-			//	Early stopping
-			if ((abs(eVal - oldEVal) < SENSITIVITY) || eVal > oldEVal)
+		#ifdef EARLY_STOPPING
+
+			if ((abs(eVal - oldEVal) < SENSITIVITY) || eVal > oldEVal) {
 				pat++;
+			}
 			else
 				pat = 0;
 
@@ -512,6 +514,13 @@ void Learning(NeuralNetworkManager& netManager, vector<NetConfig_Evaluated>& net
 			oldEVal = eVal;
 
 			cout << "done. Patience: " << pat << "/" << PATIENCE << endl;
+
+		#else
+
+			cout << "done. " << endl;
+
+		#endif // EARLY_STOPPING
+
 		}
 	}
 
