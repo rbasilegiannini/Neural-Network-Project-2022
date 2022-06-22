@@ -4,6 +4,9 @@
 using std::cout;
 using std::endl;
 using boost::numeric::ublas::subrange;
+using std::default_random_engine;
+using std::random_device;
+using std::normal_distribution;
 
 NeuralNetworkFF :: NeuralNetworkFF(const size_t inputDim, const vector<size_t>& nNeuronsPerLayer, const vector<AFuncType>& AFuncPerLayer ) {
 	_numNeurons_PerLayer = nNeuronsPerLayer;
@@ -304,13 +307,27 @@ void NeuralNetworkFF::_randomInit(const size_t layer, const int l_ext, const int
 	if (l_ext >= r_ext)
 		throw InvalidParametersException("[NNFF] l_ext must be less than r_ext.");
 
-	srand(time(0));
+	random_device rd{};
+	default_random_engine rgn{ rd() };
+	normal_distribution<Real> distNorm(0, 1);
+
 	//	Init biases
-	for (auto& b : _bias_PerLayer[layer].data())
-		b = (Real)(((rand() % ((r_ext - l_ext) * 1000)) + ((l_ext * 1000) + 1)) * 0.001);	// Random value in [l_ext, l_ext]
+	for (auto& b : _bias_PerLayer[layer].data()) {
+		auto value = distNorm(rgn);
+		
+		if (value < l_ext) value = l_ext;
+		if (value > r_ext) value = r_ext;
 
+		b = value;
+	}
 	//	Init weights
-	for (auto& w : _weights_PerLayer[layer].data())
-		w = (Real)(((rand() % ((r_ext - l_ext) * 1000)) + ((l_ext * 1000) + 1)) * 0.001);	// Random value in [l_ext, l_ext]
+	for (auto& w : _weights_PerLayer[layer].data()) {
+		auto value = distNorm(rgn);
 
+		if (value < l_ext) value = l_ext;
+		if (value > r_ext) value = r_ext;
+
+		w = value;
+
+	}
 }

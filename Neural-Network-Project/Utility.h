@@ -35,7 +35,7 @@ typedef matrix<Real> mat_r;
 typedef vector<Real> vec_r;
 
 /**
- * Range generator.
+ * Range (of integers) generator.
  * 
  * \param	first is the first element of the range.
  * \param	last is the last element of the range (not included).
@@ -61,7 +61,7 @@ inline vector<long long int> RangeGen(const long long int first, const long long
 }
 
 /**
- * This function compute the SoftMax.
+ * This function computes the SoftMax.
  * 
  * \param outputs is the column vector with all the outputs.
  * \param idxOutput is the neuron's output index.
@@ -129,7 +129,7 @@ inline vector<T> ConvertMatToArray(const matrix<T>& mat) {
 }
 
 /**
- * This function is used to normalize a vector in [0, 1].
+ * This function is used to normalize a vector in [l_ext, r_ext].
  * 
  * \param vec is the vector to normalize.
  * \param max value for normalization.
@@ -137,11 +137,11 @@ inline vector<T> ConvertMatToArray(const matrix<T>& mat) {
  * \return A vector of the same type but normalized.
  */
 template <typename T>
-inline vector<T> NormalizeVector(const vector<T> vec, T max, T min) {
+inline vector<T> NormalizeVector(const vector<T> vec, T max, T min, T l_ext, T r_ext) {
 	vector<T> arrNorm;
 
 	for (const auto& e : vec)
-		arrNorm.push_back((e-min) / (max - min));
+		arrNorm.push_back(l_ext + (((e - min) * (r_ext - l_ext)) / (max - min)));
 	return arrNorm;
 }
 
@@ -169,7 +169,7 @@ vector<T> operator+(const std::vector<T>& vec1, const std::vector<T>& vec2) {
 }
 
 /**
- * This functions return the sign of an input.
+ * This function returns the sign of an input.
  * 
  * \param val
  * \return +1 or -1.

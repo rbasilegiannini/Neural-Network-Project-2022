@@ -5,7 +5,6 @@
 #include "Utility.h"
 
 using std::string;
-using std::max_element;
 
 template<typename T>
 inline bool SavePlot(const string& namePlot, const vector<T>& x_axis, const vector<T>& y_axis) {

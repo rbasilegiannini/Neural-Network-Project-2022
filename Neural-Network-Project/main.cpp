@@ -1,26 +1,19 @@
 // main.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
-#include "TestFunction.h"
 #include "RPROP.h"
 #include "ReadMNIST.h"
 #include "AnalysisTools.h"
 #include <array>
 #include <algorithm>
-#include <random>
 #include <numeric>
 
 #pragma region Support
 
 using std::fill;
-using std::accumulate;
-using std::default_random_engine;
-using std::random_device;
 using std::cout;
 using std::endl;
 using std::array;
-using std::uniform_int_distribution;
-using std::to_string;
 using std::abs;
 
 struct Sample1D {
@@ -54,15 +47,15 @@ NetConfig_Evaluated RetrieveBestNet(const vector<NetConfig_Evaluated>&, NeuralNe
 constexpr size_t NUM_TRAIN_SAMPLE = 5000;	//Request: 5000
 constexpr size_t NUM_VAL_SAMPLE = 2500;		//Request: 2500
 constexpr size_t NUM_TEST_SAMPLE = 2500;	//Request: 2500
-constexpr size_t MAX_EPOCH = 500;
+constexpr size_t MAX_EPOCH = 1000;
 
 constexpr AFuncType AFUNC_LAYER = AFuncType::SIGMOID;
-/*constexpr*/ size_t NUM_NEURONS_INPUT = 2;
-/*constexpr*/ size_t NUM_NEURONS_HIDDEN = 10;
-/*constexpr*/ size_t NUM_HIDDEN_LAYERS = 2;
+constexpr size_t NUM_HIDDEN_LAYERS = 2;
+constexpr array<size_t, NUM_HIDDEN_LAYERS> NUM_NEURONS_HIDDEN{ 5, 10};
 
 constexpr size_t NUM_CLASS = 10;
 constexpr size_t PATIENCE = 20;
+constexpr double resizeFactor = 0.5;
 
 #define EARLY_STOPPING
 constexpr float SENSITIVITY = (float)0.005;
@@ -71,243 +64,15 @@ constexpr float SENSITIVITY = (float)0.005;
 
 int main() {
 
-/**/
-	//DEBUG
-	size_t counter{ 0 };
-	for (const auto& i : RangeGen(0, 18)) {
-		switch (i)
-		{
-		case 0:
-			NUM_NEURONS_INPUT = 5;
-			NUM_NEURONS_HIDDEN = 5;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-		case 1:
-			NUM_NEURONS_INPUT = 5;
-			NUM_NEURONS_HIDDEN = 5;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-		case 2:
-			NUM_NEURONS_INPUT = 5;
-			NUM_NEURONS_HIDDEN = 5;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-
-		case 3:
-			NUM_NEURONS_INPUT = 10;
-			NUM_NEURONS_HIDDEN = 10;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-		case 4:
-			NUM_NEURONS_INPUT = 10;
-			NUM_NEURONS_HIDDEN = 10;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-		case 5:
-			NUM_NEURONS_INPUT = 10;
-			NUM_NEURONS_HIDDEN = 10;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-
-		case 6:
-			NUM_NEURONS_INPUT = 20;
-			NUM_NEURONS_HIDDEN = 20;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-		case 7:
-			NUM_NEURONS_INPUT = 20;
-			NUM_NEURONS_HIDDEN = 20;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-		case 8:
-			NUM_NEURONS_INPUT = 20;
-			NUM_NEURONS_HIDDEN = 20;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-
-		case 9:
-			NUM_NEURONS_INPUT = 50;
-			NUM_NEURONS_HIDDEN = 50;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-		case 10:
-			NUM_NEURONS_INPUT = 50;
-			NUM_NEURONS_HIDDEN = 50;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-		case 11:
-			NUM_NEURONS_INPUT = 50;
-			NUM_NEURONS_HIDDEN = 50;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-
-		case 12:
-			NUM_NEURONS_INPUT = 100;
-			NUM_NEURONS_HIDDEN = 100;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-		case 13:
-			NUM_NEURONS_INPUT = 100;
-			NUM_NEURONS_HIDDEN = 100;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-		case 14:
-			NUM_NEURONS_INPUT = 100;
-			NUM_NEURONS_HIDDEN = 100;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-
-		case 15:
-			NUM_NEURONS_INPUT = 200;
-			NUM_NEURONS_HIDDEN = 200;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-		case 16:
-			NUM_NEURONS_INPUT = 200;
-			NUM_NEURONS_HIDDEN = 200;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-		case 17:
-			NUM_NEURONS_INPUT = 200;
-			NUM_NEURONS_HIDDEN = 200;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-
-		case 18:
-			NUM_NEURONS_INPUT = 500;
-			NUM_NEURONS_HIDDEN = 500;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-		case 19:
-			NUM_NEURONS_INPUT = 500;
-			NUM_NEURONS_HIDDEN = 500;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-		case 20:
-			NUM_NEURONS_INPUT = 500;
-			NUM_NEURONS_HIDDEN = 500;
-			NUM_HIDDEN_LAYERS = 1;
-			break;
-
-		case 21:
-			NUM_NEURONS_HIDDEN = 10;
-			NUM_HIDDEN_LAYERS = 3;
-			break;
-		case 22:
-			NUM_NEURONS_HIDDEN = 10;
-			NUM_HIDDEN_LAYERS = 3;
-			break;
-		case 23:
-			NUM_NEURONS_HIDDEN = 10;
-			NUM_HIDDEN_LAYERS = 3;
-			break;
-
-		case 24:
-			NUM_NEURONS_HIDDEN = 20;
-			NUM_HIDDEN_LAYERS = 3;
-			break;
-		case 25:
-			NUM_NEURONS_HIDDEN = 20;
-			NUM_HIDDEN_LAYERS = 3;
-			break;
-		case 26:
-			NUM_NEURONS_HIDDEN = 20;
-			NUM_HIDDEN_LAYERS = 3;
-			break;
-
-		case 27:
-			NUM_NEURONS_HIDDEN = 5;
-			NUM_HIDDEN_LAYERS = 4;
-			break;
-		case 28:
-			NUM_NEURONS_HIDDEN = 5;
-			NUM_HIDDEN_LAYERS = 4;
-			break;
-		case 29:
-			NUM_NEURONS_HIDDEN = 5;
-			NUM_HIDDEN_LAYERS = 4;
-			break;
-
-		case 30:
-			NUM_NEURONS_HIDDEN = 10;
-			NUM_HIDDEN_LAYERS = 4;
-			break;
-		case 31:
-			NUM_NEURONS_HIDDEN = 10;
-			NUM_HIDDEN_LAYERS = 4;
-			break;
-		case 32:
-			NUM_NEURONS_HIDDEN = 10;
-			NUM_HIDDEN_LAYERS = 4;
-			break;
-
-		case 33:
-			NUM_NEURONS_HIDDEN = 20;
-			NUM_HIDDEN_LAYERS = 4;
-			break;
-		case 34:
-			NUM_NEURONS_HIDDEN = 20;
-			NUM_HIDDEN_LAYERS = 4;
-			break;
-		case 35:
-			NUM_NEURONS_HIDDEN = 20;
-			NUM_HIDDEN_LAYERS = 4;
-			break;
-
-		case 36:
-			NUM_NEURONS_HIDDEN = 5;
-			NUM_HIDDEN_LAYERS = 5;
-			break;
-		case 37:
-			NUM_NEURONS_HIDDEN = 5;
-			NUM_HIDDEN_LAYERS = 5;
-			break;
-		case 38:
-			NUM_NEURONS_HIDDEN = 5;
-			NUM_HIDDEN_LAYERS = 5;
-			break;
-
-		case 39:
-			NUM_NEURONS_HIDDEN = 10;
-			NUM_HIDDEN_LAYERS = 5;
-			break;
-		case 40:
-			NUM_NEURONS_HIDDEN = 10;
-			NUM_HIDDEN_LAYERS = 5;
-			break;
-		case 41:
-			NUM_NEURONS_HIDDEN = 10;
-			NUM_HIDDEN_LAYERS = 5;
-			break;
-
-		case 42:
-			NUM_NEURONS_HIDDEN = 20;
-			NUM_HIDDEN_LAYERS = 5;
-			break;
-		case 43:
-			NUM_NEURONS_HIDDEN = 20;
-			NUM_HIDDEN_LAYERS = 5;
-			break;
-		case 44:
-			NUM_NEURONS_HIDDEN = 20;
-			NUM_HIDDEN_LAYERS = 5;
-			break;
-
-		default:
-			break;
-		}
-
-
-	//
-
 	//	Prepare network manager
-	double resizeFactor{ 0.5 };
 	size_t inputDim{ size_t (resizeFactor*28 * resizeFactor*28) };
-	vector<size_t> numNeurons_PerLayer(NUM_HIDDEN_LAYERS+1, NUM_NEURONS_HIDDEN);
+	vector<size_t> numNeurons_PerLayer(NUM_HIDDEN_LAYERS+1);
 	vector<AFuncType> AFunc_PerLayer(NUM_HIDDEN_LAYERS+1, AFUNC_LAYER);
+	NeuralNetworkManager& netManager = NeuralNetworkManager::GetNNManager(Hyperparameters());
 
+	for (const auto& n : RangeGen(0, NUM_NEURONS_HIDDEN.size()))
+		numNeurons_PerLayer[n] = NUM_NEURONS_HIDDEN[n];
 	numNeurons_PerLayer.back() = NUM_CLASS; // Output network
-	numNeurons_PerLayer.front() = NUM_NEURONS_INPUT;
 
 	AFunc_PerLayer.back() = AFuncType::IDENTITY; // To use the cross-entropy + softmax
 	Hyperparameters hyp{
@@ -316,13 +81,23 @@ int main() {
 		AFunc_PerLayer
 	};
 
-	NeuralNetworkManager& netManager = NeuralNetworkManager::GetNNManager(hyp);
+	netManager.ResetHyperparameters(hyp);
+	netManager.RandomInitialization(-1, 1);
+
 	cout << "Network with" << endl;
 	cout << "Hidden layer: " << netManager.GetNumLayers()-1 << endl;
-	cout << "Neurons in input layer: " << NUM_NEURONS_INPUT << endl;
-	cout << "Neurons per hidden layer: " << NUM_NEURONS_HIDDEN << endl;
-	cout << "Activation function: " << NameOfAFuncType(AFUNC_LAYER) << endl;
+	
+	cout << "Neurons per layer: ";
+	for (const auto& n : RangeGen(0, netManager.GetNumLayers()))
+		cout << netManager.GetAllNumNeurons()[n] << "/";
 	cout << endl;
+	cout << "Activation function: " << NameOfAFuncType(netManager.GetAllAFuncType().front()) << endl;
+	cout << endl;
+
+	//	Free memory
+	numNeurons_PerLayer.clear();
+	AFunc_PerLayer.clear();
+
 	//
 	
 	vector<NetConfig_Evaluated> networksEval;
@@ -331,7 +106,6 @@ int main() {
 
 	ComposeDataset(trainingSet, validationSet, testSet, resizeFactor);
 
-	netManager.RandomInitialization(0, 1);
 	Learning(netManager, networksEval, trainingSet, validationSet, MAX_EPOCH);
 	bestNetEval = RetrieveBestNet(networksEval, netManager);
 	auto accuracy = Accuracy(netManager, testSet);
@@ -350,16 +124,12 @@ int main() {
 		y_error_val.push_back(net.error_validation);
 	}
 
-	string testCase = NameOfAFuncType(AFUNC_LAYER) + " " + to_string(NUM_HIDDEN_LAYERS)
-		+ " HL "+ to_string(NUM_NEURONS_HIDDEN) + " neur per HL " +
-		to_string(x_epoch.size()) + " epoches " + to_string(counter);
-
-	if(SavePlot("Plot ET "+ testCase, x_epoch, y_error_train))
+	if(SavePlot("Plot training error", x_epoch, y_error_train))
 		cout << "Training error plot saved." << endl;
 	else
 		cout << "Error to save training error plot." << endl;
 
-	if(SavePlot("Plot EV " + testCase, x_epoch, y_error_val))
+	if(SavePlot("Plot validation error", x_epoch, y_error_val))
 		cout << "Validation error plot saved." << endl;
 	else
 		cout << "Error to save validation error plot." << endl;
@@ -371,17 +141,6 @@ int main() {
 	cout << "Accuracy: " << accuracy*100 << "%" << endl;
 	cout << endl;
 
-
-
-	// TESTING
-	std::ofstream myfile;
-	myfile.open("acc" + to_string(counter) + " " +to_string(NUM_HIDDEN_LAYERS)+"x"+to_string(NUM_NEURONS_HIDDEN)+ ".txt");
-	myfile << "Epoch: " << bestNetEval.epoch <<
-		" Accuracy: " << accuracy * 100 << "%";
-	myfile.close();
-	counter++;
-}
-/**/
 }
 // Body
 
@@ -402,7 +161,6 @@ void ComposeDataset(Dataset& trainSet, Dataset& valSet, Dataset& testSet, const 
 	vector<ImageLabeled> samples = ReadSample(sampleImagesFile, sampleLabelsFile, NUM_TRAIN_SAMPLE + NUM_VAL_SAMPLE);
 	ResizeDatasetRaw(samples, factor);
 
-
 	//	Retrieve max and min from known samples. These values will be use also for test set. 
 	vector<uint8_t> minmaxFromSamples = RetrieveMinMaxFromDatasetRaw(samples);
 	uint8_t min = minmaxFromSamples[0];
@@ -412,7 +170,7 @@ void ComposeDataset(Dataset& trainSet, Dataset& valSet, Dataset& testSet, const 
 	cout << "Compose training set..." << endl;
 	for (const auto& i : RangeGen(0, NUM_TRAIN_SAMPLE)) {
 		auto sample = samples[i];
-		trainSet[i].image1D = NormalizeVector(ConvertMatToArray<Real>(sample.image), (Real)max, (Real)min);
+		trainSet[i].image1D = NormalizeVector(ConvertMatToArray<Real>(sample.image), (Real)max, (Real)min, (Real)(- 0.5), (Real)0.5);
 		trainSet[i].labelOneHot[sample.label] = 1;
 	}
 
@@ -420,7 +178,7 @@ void ComposeDataset(Dataset& trainSet, Dataset& valSet, Dataset& testSet, const 
 	cout << "Compose validation set..." << endl;
 	for (const auto& i : RangeGen(0, NUM_VAL_SAMPLE)) {
 		auto sample = samples[NUM_TRAIN_SAMPLE+i];
-		valSet[i].image1D = NormalizeVector(ConvertMatToArray<Real>(sample.image), (Real)max, (Real)min);
+		valSet[i].image1D = NormalizeVector(ConvertMatToArray<Real>(sample.image), (Real)max, (Real)min, (Real)(-0.5), (Real)0.5);
 		valSet[i].labelOneHot[sample.label] = 1;
 	}
 	samples.clear(); // Free memory
@@ -433,7 +191,7 @@ void ComposeDataset(Dataset& trainSet, Dataset& valSet, Dataset& testSet, const 
 	cout << "Compose test set..." << endl;
 	for (const auto& i : RangeGen(0, NUM_TEST_SAMPLE)) {
 		auto sample = tests[i];
-		testSet[i].image1D = NormalizeVector(ConvertMatToArray<Real>(sample.image), (Real)max, (Real)min);
+		testSet[i].image1D = NormalizeVector(ConvertMatToArray<Real>(sample.image), (Real)max, (Real)min, (Real)(-0.5), (Real)0.5);
 		testSet[i].labelOneHot[sample.label] = 1;
 	}
 	tests.clear(); // Free memory
@@ -454,6 +212,7 @@ void Learning(NeuralNetworkManager& netManager, vector<NetConfig_Evaluated>& net
 
 		return AllParams;
 	};
+	//
 
 	try {
 
@@ -467,7 +226,7 @@ void Learning(NeuralNetworkManager& netManager, vector<NetConfig_Evaluated>& net
 		vec_r gradE(numParams, 0);
 
 		// Batch
-		Real oldEVal{ std::numeric_limits<float>::max() };
+		Real oldEVal{ (Real)std::numeric_limits<float>::max() };
 		size_t pat{ 0 };
 		cout << "Learning batch..." << endl;
 
@@ -488,6 +247,8 @@ void Learning(NeuralNetworkManager& netManager, vector<NetConfig_Evaluated>& net
 			auto eVal = ComputeError(netManager, valSet, EType);
 			auto eTrain = ComputeError(netManager, trainSet, EType);
 
+			cout << "validation error: " << eVal << "... ";
+
 			NetConfig_Evaluated netEval{
 				netManager.GetNumLayers(),
 				netManager.GetAllNumNeurons(),
@@ -505,13 +266,13 @@ void Learning(NeuralNetworkManager& netManager, vector<NetConfig_Evaluated>& net
 			if ((abs(eVal - oldEVal) < SENSITIVITY) || eVal > oldEVal) {
 				pat++;
 			}
-			else
+			else {
 				pat = 0;
+				oldEVal = eVal;
+			}
 
 			if (pat == PATIENCE)
 				break;
-
-			oldEVal = eVal;
 
 			cout << "done. Patience: " << pat << "/" << PATIENCE << endl;
 
@@ -529,7 +290,6 @@ void Learning(NeuralNetworkManager& netManager, vector<NetConfig_Evaluated>& net
 	}
 
 	cout << endl;
-
 }
 NetConfig_Evaluated RetrieveBestNet(const vector<NetConfig_Evaluated>& networksEval, NeuralNetworkManager& netManager) {
 
@@ -552,6 +312,7 @@ NetConfig_Evaluated RetrieveBestNet(const vector<NetConfig_Evaluated>& networksE
 }
 float Accuracy(NeuralNetworkManager& netManager, const Dataset& testSet) {
 	cout << "Compute accuracy... ";
+
 	size_t numCorrect{ 0 };
 	for (const auto& sample : testSet) {
 		netManager.Run(sample.image1D);
@@ -564,7 +325,9 @@ float Accuracy(NeuralNetworkManager& netManager, const Dataset& testSet) {
 			numCorrect++;
 	}
 	float accuracy = ((float)numCorrect) / ((float)testSet.size());
+	
 	cout << "done." << endl;
+
 	return accuracy;
 }
 Real ComputeError(NeuralNetworkManager& nnManager, const vector<Sample1D>& dataset, const EFuncType& Etype) {

@@ -4,7 +4,7 @@
 #include "ErrorFunction.h"
 
 /**
-	This data structure contains the hyperparameters of th network:
+	This data structure contains the hyperparameters of the network:
 	- the input's dimension;
 	- the number of neurons for each layer;
 	- the activation function for each layer.
@@ -40,14 +40,13 @@ public:
 	void Run(const vec_r& input);
 
 	/**
-	 *	This method compute the gradient of the error function for a sample.
+	 *	This method computes the gradient of the error function for a sample.
 	 * 
 	 * \param	EFuncType is the error function's type of which we want to compute the gradient.
 	 * \param	target
 	 * \return	A vector cointaining the partial derivatives of the error function.
 	 */
-	vec_r ComputeGradE_PerSample(const EFuncType EType, const vec_r& target)
-		noexcept(false);
+	vec_r ComputeGradE_PerSample(const EFuncType EType, const vec_r& target) noexcept(false);
 
 	/**
 	 *	This function initializes the neural network's parameteres with random value.
@@ -95,8 +94,8 @@ public:
 	
 	void PrintNetwork() { _neuralNetwork.PrintNetwork(); }
 
-	//	Debug function
-	NeuralNetworkFF getNet() { return _neuralNetwork; }
+	//	Test function
+	NeuralNetworkFF GetNet() { return _neuralNetwork; }
 private:
 	//	Singleton
 	NeuralNetworkManager() = default;

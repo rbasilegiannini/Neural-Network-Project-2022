@@ -137,9 +137,6 @@ void TestCase_GradientComputation() {
 		// Set input
 		input.resize(100 * nTest);
 
-		for (auto& i : input)
-			i = (Real)(((rand() % 21) - 10) * 0.1);	// Random value in [-1, 1]
-
 		// Create the NN
 		vector<AFuncType> AFuncPerLayer(nNeuronsPerLayer.size());
 

@@ -14,9 +14,9 @@ struct NetworkResult {
 };
 
 /**
- *
- *	\brief Data structure of a multilayer Neural Network Feed Forward.
- *
+ 
+	Data structure of a multilayer Neural Network Feed Forward.
+ 
  */
 class NeuralNetworkFF {
 public:

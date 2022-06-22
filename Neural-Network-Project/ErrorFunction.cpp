@@ -72,7 +72,7 @@ Real ErrorFunction::_sumOfSquaresDer(const Real neuronOutput, const Real target)
 
 Real ErrorFunction::_crossEntropy(const mat_r& NNOutput, const mat_r& targets) {
 
-	//	Check to avoid out of range. TODO: use exception 
+	//	Check to avoid out of range. 
 	if (targets.size1() != NNOutput.size1()) {
 		std::cout << "[ERROR] output is not compatible with targets." << std::endl;
 		return -1;
@@ -81,7 +81,7 @@ Real ErrorFunction::_crossEntropy(const mat_r& NNOutput, const mat_r& targets) {
 	//	Summation
 	Real summation{ 0 };
 	for (const auto& k : RangeGen(0, NNOutput.size1())) {
-		//	Check if the log domain is respected. TODO: use exception
+		//	Check if the log domain is respected. 
 		if (NNOutput(k,0) <= 0) {
 			std::cout << "[ERROR] output is not compatible with Cross Entropy." << std::endl;
 			return -1;
@@ -95,7 +95,7 @@ Real ErrorFunction::_crossEntropy(const mat_r& NNOutput, const mat_r& targets) {
 }
 
 Real ErrorFunction::_crossEntropy_softMax(const mat_r& NNOutput, const mat_r& targets) {
-	//	Check to avoid out of range. TODO: use exception 
+	//	Check to avoid out of range. 
 	if (targets.size1() != NNOutput.size1()) {
 		std::cout << "[ERROR] output is not compatible with targets." << std::endl;
 		return -1;
