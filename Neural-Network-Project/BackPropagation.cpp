@@ -1,7 +1,7 @@
 #include "BackPropagation.h"
 
 vec_r BackPropagation(const DataFromNetwork& dataNN, const EFuncType EType, const mat_r& target)
-throw (InvalidParametersException) {
+noexcept(false) {
 
 	auto nLayers = dataNN.numLayers;
 	auto AFuncLayer = dataNN.AFunctionDerivativePerLayer;
@@ -13,7 +13,7 @@ throw (InvalidParametersException) {
 
 #pragma region Tools
 
-	auto PostProcessing = [&]() {
+	auto postProcessing = [&]() {
 		mat_r outputs(nNeuronsLayer.back(), 1);
 
 		for (const auto& k : RangeGen(0, nNeuronsLayer.back())) {
@@ -24,7 +24,7 @@ throw (InvalidParametersException) {
 	};
 
 	AFuncType AFuncType = AFuncLayer.back();
-	auto ComputeDeltaOutput = [&](const size_t neuron) -> Real {
+	auto computeDeltaOutput = [&](const size_t neuron) -> Real {
 
 		auto a_k = AValLayer.back()(neuron, 0);
 		auto y_k = outputsLayer.back()(neuron, 0);
@@ -39,13 +39,13 @@ throw (InvalidParametersException) {
 
 #pragma region Checks
 	if (target.size1() != nNeuronsLayer.back())
-		throw InvalidParametersException("[BACKPROP] the target is not compatbile with network's output.");
+		throw InvalidParametersException("[BACKPROP] the target is not compatible with network's output.");
 
 	//	Check on loss function
 	EFuncType EFuncType{ EType };
 	if (EType == EFuncType::CROSSENTROPY_SOFTMAX) {
 		if (dataNN.AFunctionDerivativePerLayer.back() == AFuncType::IDENTITY) 
-			PostProcessing();
+			postProcessing();
 
 		else {
 			std::cout << "[ERROR] It's not possibile to run the Post Processing step. " << std::endl;
@@ -72,7 +72,7 @@ throw (InvalidParametersException) {
 
 	mat_r deltaOut_row(1, nNeuronsLayer.back());
 	for (const auto& k : RangeGen(0, nNeuronsLayer.back())) 
-		deltaOut_row(0, k) = ComputeDeltaOutput(k);
+		deltaOut_row(0, k) = computeDeltaOutput(k);
 	allDelta_row.back() = deltaOut_row;
 
 	//	Internal delta

@@ -10,7 +10,7 @@ using std::function;
 using std::string;
 
 /**
- * @brief All error functions provided are reachable by these enums.
+	All error functions provided are reachable by these enums.
  */
 enum class EFuncType { SUMOFSQUARES, CROSSENTROPY, CROSSENTROPY_SOFTMAX};
 

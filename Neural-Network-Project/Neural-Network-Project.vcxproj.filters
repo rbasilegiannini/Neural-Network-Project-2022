@@ -19,6 +19,9 @@
     <Filter Include="Header Files\Utils">
       <UniqueIdentifier>{28e31c0c-6a6f-4280-a84a-d41a95707a4d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\pbPlot">
+      <UniqueIdentifier>{8d445bd6-699b-48b9-b99a-d64ba87d7d5f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -41,6 +44,18 @@
     </ClCompile>
     <ClCompile Include="NeuralNetworkManager.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ReadMNIST.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RPROP.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pbPlots\pbPlots.cpp">
+      <Filter>Header Files\pbPlot</Filter>
+    </ClCompile>
+    <ClCompile Include="pbPlots\supportLib.cpp">
+      <Filter>Header Files\pbPlot</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -67,6 +82,21 @@
     </ClInclude>
     <ClInclude Include="InvalidParametersException.h">
       <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="ReadMNIST.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RPROP.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AnalysisTools.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="pbPlots\pbPlots.hpp">
+      <Filter>Header Files\pbPlot</Filter>
+    </ClInclude>
+    <ClInclude Include="pbPlots\supportLib.hpp">
+      <Filter>Header Files\pbPlot</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

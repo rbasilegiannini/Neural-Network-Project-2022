@@ -1,5 +1,7 @@
 #include "ErrorFunction.h"
 
+using std::max;
+
 map<EFuncType, function<Real(const mat_r&, const mat_r&)>> ErrorFunction::EFunction = {
 
     { EFuncType::SUMOFSQUARES, [](const mat_r& output, const mat_r& target) {
@@ -59,7 +61,7 @@ Real ErrorFunction::_sumOfSquares(const mat_r& NNOutput, const mat_r& targets) {
 		
 	Real error{ 0 };
 	for (const auto& k : RangeGen (0, NNOutput.size1()))
-		error += pow(NNOutput(k,0) - targets(k,0), 2);
+		error += (Real)pow(NNOutput(k,0) - targets(k,0), 2);
 
 	return error/2;
 }
@@ -70,7 +72,7 @@ Real ErrorFunction::_sumOfSquaresDer(const Real neuronOutput, const Real target)
 
 Real ErrorFunction::_crossEntropy(const mat_r& NNOutput, const mat_r& targets) {
 
-	//	Check to avoid out of range. TODO: use exception 
+	//	Check to avoid out of range. 
 	if (targets.size1() != NNOutput.size1()) {
 		std::cout << "[ERROR] output is not compatible with targets." << std::endl;
 		return -1;
@@ -79,13 +81,13 @@ Real ErrorFunction::_crossEntropy(const mat_r& NNOutput, const mat_r& targets) {
 	//	Summation
 	Real summation{ 0 };
 	for (const auto& k : RangeGen(0, NNOutput.size1())) {
-		//	Check if the log domain is respected. TODO: use exception
+		//	Check if the log domain is respected. 
 		if (NNOutput(k,0) <= 0) {
 			std::cout << "[ERROR] output is not compatible with Cross Entropy." << std::endl;
 			return -1;
 		}
-
-		summation += targets(k,0) * log(NNOutput(k,0));
+		auto out = max(NNOutput(k, 0), (Real)1e-07);	// To avoid 0
+		summation += targets(k,0) * log(out);
 	}
 	Real loss{ -summation };
 
@@ -93,7 +95,7 @@ Real ErrorFunction::_crossEntropy(const mat_r& NNOutput, const mat_r& targets) {
 }
 
 Real ErrorFunction::_crossEntropy_softMax(const mat_r& NNOutput, const mat_r& targets) {
-	//	Check to avoid out of range. TODO: use exception 
+	//	Check to avoid out of range. 
 	if (targets.size1() != NNOutput.size1()) {
 		std::cout << "[ERROR] output is not compatible with targets." << std::endl;
 		return -1;
@@ -102,7 +104,9 @@ Real ErrorFunction::_crossEntropy_softMax(const mat_r& NNOutput, const mat_r& ta
 	//	Summation
 	Real summation{ 0 };
 	for (const auto& k : RangeGen(0, NNOutput.size1())) {
-		summation += targets(k,0) * log(SoftMax(NNOutput, k));
+		// DEBUG
+		auto sm = max(SoftMax(NNOutput, k), (Real)1e-07);	// To avoid 0
+		summation += targets(k,0) * log(sm);
 	}
 
 	Real loss{ -summation };

@@ -16,9 +16,9 @@ using std::function;
 using std::string;
 
 /**
- * @brief All activation functions provided are reachable by these enums.
+	All activation functions provided are reachable by these enums.
  */
-enum class AFuncType {SIGMOID, IDENTITY, RELU};
+enum class AFuncType {SIGMOID, IDENTITY, RELU, LEAKYRELU};
 
 /**
  * This function returns the name of the activation function.
@@ -30,7 +30,7 @@ string NameOfAFuncType(const AFuncType type);
 
 /**
  *
- * @brief The class provides a map used to call an activation function by AFuncType enum.
+	The class provides a map used to call an activation function by AFuncType enum.
  *
  */
 class ActivationFunction {
@@ -46,4 +46,6 @@ private:
 	static Real _relu(const Real input);
 	static Real _sigmoid_Der(const Real input);
 	static Real _relu_Der(const Real input);
+	static Real _LeakyRelu(const Real input);
+	static Real _LeakyRelu_Der(const Real input);
 };

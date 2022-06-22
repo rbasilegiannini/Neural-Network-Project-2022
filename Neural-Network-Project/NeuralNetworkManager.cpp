@@ -18,7 +18,7 @@ void NeuralNetworkManager::Run(const vec_r& input) {
 }
 
 vec_r NeuralNetworkManager::ComputeGradE_PerSample(const EFuncType EFuncType, const vec_r& target)
-throw (InvalidParametersException) {
+noexcept(false) {
 	if (_netResult.activationsPerLayer.empty())
 		throw InvalidParametersException("[MANAGER] it's mandatory to perform a forward propagation step first.");
 
@@ -89,7 +89,22 @@ mat_r NeuralNetworkManager::GetAllParam_PerLayer(const size_t layer) {
 	}
 	catch (InvalidParametersException e) {
 		std::cout << e.getErrorMessage() << std::endl;
+		return mat_r();
 	}
+}
+
+vector<size_t> NeuralNetworkManager::GetAllNumNeurons() {
+	vector<size_t> AllNumNeurons;
+	for (const auto& layer : RangeGen(0, GetNumLayers()))
+		AllNumNeurons.push_back(_neuralNetwork.GetNumNeurons_PerLayer(layer));
+	return AllNumNeurons;
+}
+
+vector<AFuncType> NeuralNetworkManager::GetAllAFuncType() {
+	vector<AFuncType> AllFuncType;
+	for (const auto& layer : RangeGen(0, GetNumLayers()))
+		AllFuncType.push_back(_neuralNetwork.GetAFunc_PerLayer(layer));
+	return AllFuncType;
 }
 
 void NeuralNetworkManager::RandomInitialization(const int l_ext, const int r_ext) {
