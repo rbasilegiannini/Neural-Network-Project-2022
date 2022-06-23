@@ -107,7 +107,7 @@ vector<AFuncType> NeuralNetworkManager::GetAllAFuncType() {
 	return AllFuncType;
 }
 
-void NeuralNetworkManager::RandomInitialization(const int l_ext, const int r_ext) {
+void NeuralNetworkManager::RandomInitialization(const float l_ext, const float r_ext) {
 	_neuralNetwork.RandomInitialization(l_ext, r_ext);
 }
 

@@ -208,7 +208,7 @@ void TestCase_GradientComputation() {
 			auto duration_bp = duration_cast<milliseconds>(stop_bp - start_bp);
 
 			//	Testing & compare
-			auto nn = nnManager.getNet();
+			auto nn = nnManager.GetNet();
 			auto start_chk = high_resolution_clock::now();
 			bool test = Test_GradientChecking(nn, gradE, Etype, input, target);
 			auto stop_chk = high_resolution_clock::now();

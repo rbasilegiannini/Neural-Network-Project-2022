@@ -54,7 +54,7 @@ public:
 	 * \param	l_ext is the left extreme (included)
 	 * \param	r_ext ir the right extreme (included)
 	 */
-	void RandomInitialization(const int l_ext, const int r_ext);
+	void RandomInitialization(const float l_ext, const float r_ext);
 
 	/**
 	 *	This function changes the NN's hyperparameters. The parameteres will be reinitialized.

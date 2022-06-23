@@ -250,7 +250,7 @@ NetworkResult NeuralNetworkFF::ComputeNetwork(const vec_r& input) noexcept(false
 	return netResult;
 }
 
-void NeuralNetworkFF::RandomInitialization(const int l_ext, const int r_ext) {
+void NeuralNetworkFF::RandomInitialization(const float l_ext, const float r_ext) {
 
 	try {
 		for (const auto& layer : RangeGen(0, _numLayers))
@@ -300,7 +300,7 @@ void NeuralNetworkFF::PrintNetwork() {
 	}
 }
 
-void NeuralNetworkFF::_randomInit(const size_t layer, const int l_ext, const int r_ext) noexcept(false) {
+void NeuralNetworkFF::_randomInit(const size_t layer, const float l_ext, const float r_ext) noexcept(false) {
 	if (layer >= _numLayers)
 		throw InvalidParametersException("[NNFF] layer must be in [0, ..., NetworkLayer-1].");
 

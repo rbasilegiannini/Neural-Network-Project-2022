@@ -64,7 +64,7 @@ public:
 	 * \param	l_ext is the left extreme (included)
 	 * \param	r_ext ir the right extreme (included)
 	 */
-	void RandomInitialization(const int l_ext, const int r_ext);
+	void RandomInitialization(const float l_ext, const float r_ext);
 
 	/**
 		This function prints, for each layer:
@@ -84,6 +84,6 @@ private:
 	vector<mat_r> _bias_PerLayer;
 	vector<AFuncType> _activationFunction_PerLayer;
 
-	void _randomInit(const size_t layer, const int l_ext, const int r_ext) noexcept(false);
+	void _randomInit(const size_t layer, const float l_ext, const float r_ext) noexcept(false);
 };
 
