@@ -1,5 +1,5 @@
 ## Introduction
-A simple project for the Neural Networks course. The goal is to model the learning process using the Back Propagation algorithm and the RPROP update rule. The dataset used is [MNIST](http://yann.lecun.com/exdb/mnist/) and the programming language used is C++.
+This academic project aims to develop a Neural Network for the Machine Learning course. The goal is to model the learning process using the Back Propagation algorithm and the RPROP update rule. The dataset used is [MNIST](http://yann.lecun.com/exdb/mnist/) and the programming language used is C++.
 
 ## Requirements
 
